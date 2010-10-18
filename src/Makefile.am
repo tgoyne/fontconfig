@@ -30,7 +30,6 @@ fontconfig_def_dependency = fontconfig.def
 # gcc import library install/uninstall
 
 install-libtool-import-lib: 
-	$(INSTALL) .libs/libfontconfig.dll.a $(DESTDIR)$(libdir)
 	$(INSTALL) fontconfig.def $(DESTDIR)$(libdir)/fontconfig.def
 
 uninstall-libtool-import-lib:
@@ -71,8 +70,6 @@ INCLUDES = 						\
 	-I$(top_srcdir)					\
 	-I$(top_srcdir)/src				\
 	$(FREETYPE_CFLAGS)				\
-	$(LIBXML2_CFLAGS)				\
-	$(EXPAT_CFLAGS)					\
 	$(WARN_CFLAGS)					\
 	-DFC_CACHEDIR='"$(FC_CACHEDIR)"'                \
 	-DFONTCONFIG_PATH='"$(CONFDIR)"'
@@ -128,7 +125,7 @@ lib_LTLIBRARIES = libfontconfig.la
 libfontconfig_la_LDFLAGS =			\
 	-version-info @LIBT_VERSION_INFO@ -no-undefined $(export_symbols)
 
-libfontconfig_la_LIBADD = $(ICONV_LIBS) $(FREETYPE_LIBS) $(LIBXML2_LIBS) $(EXPAT_LIBS)
+libfontconfig_la_LIBADD = $(ICONV_LIBS) $(FREETYPE_LIBS)
 
 libfontconfig_la_DEPENDENCIES = $(fontconfig_def_dependency)
 

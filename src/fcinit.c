@@ -24,25 +24,25 @@
 
 #include "fcint.h"
 #include <stdlib.h>
+# include <shlobj.h>
 
-static FcConfig *
-FcInitFallbackConfig (void)
+static void
+FcInitFallbackConfig (FcConfig *config)
 {
-    FcConfig	*config;
+    char dir[MAX_PATH+12];
+    SHGetFolderPath(NULL, CSIDL_FONTS, NULL, 0, dir);
 
-    config = FcConfigCreate ();
-    if (!config)
-	goto bail0;
-    if (!FcConfigAddDir (config, (FcChar8 *) FC_DEFAULT_FONTS))
-	goto bail1;
-    if (!FcConfigAddCacheDir (config, (FcChar8 *) FC_CACHEDIR))
-	goto bail1;
-    return config;
+    if (!FcConfigAddDir (config, (FcChar8 *)dir))
+        goto bail1;
+
+    SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, dir);
+    strcat(dir, "\\fontconfig");
+    if (!FcConfigAddCacheDir (config, (FcChar8 *)dir))
+        goto bail1;
+    return;
 
 bail1:
     FcConfigDestroy (config);
-bail0:
-    return 0;
 }
 
 int
@@ -57,39 +57,17 @@ FcGetVersion (void)
 FcConfig *
 FcInitLoadConfig (void)
 {
-    FcConfig	*config;
-
     FcInitDebug ();
-    config = FcConfigCreate ();
-    if (!config)
-	return FcFalse;
-
-    if (!FcConfigParseAndLoad (config, 0, FcTrue))
-    {
-	FcConfigDestroy (config);
-	return FcInitFallbackConfig ();
-    }
-
-    if (config->cacheDirs && config->cacheDirs->num == 0)
-    {
-	fprintf (stderr,
-		 "Fontconfig warning: no <cachedir> elements found. Check configuration.\n");
-	fprintf (stderr,
-		 "Fontconfig warning: adding <cachedir>%s</cachedir>\n",
-		 FC_CACHEDIR);
-	fprintf (stderr,
-		 "Fontconfig warning: adding <cachedir>~/.fontconfig</cachedir>\n");
-	if (!FcConfigAddCacheDir (config, (FcChar8 *) FC_CACHEDIR) ||
-	    !FcConfigAddCacheDir (config, (FcChar8 *) "~/.fontconfig"))
-	{
-	    fprintf (stderr,
-		     "Fontconfig error: out of memory");
-	    FcConfigDestroy (config);
-	    return FcInitFallbackConfig ();
-	}
-    }
-
+    FcConfig *config = FcConfigCreate ();
+    FcInitFallbackConfig (config);
     return config;
+}
+
+FcBool
+FcConfigParseAndLoad (FcConfig *config, const FcChar8 *file, FcBool complain)
+{
+    FcInitFallbackConfig (config);
+    return FcTrue;
 }
 
 /*
