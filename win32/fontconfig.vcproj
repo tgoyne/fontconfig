@@ -156,6 +156,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\dirent.c"
+				>
+			</File>
+			<File
 				RelativePath="..\src\fcatomic.c"
 				>
 			</File>
@@ -251,6 +255,10 @@
 			>
 			<File
 				RelativePath=".\headers\config.h"
+				>
+			</File>
+			<File
+				RelativePath=".\headers\dirent.h"
 				>
 			</File>
 			<File

@@ -136,7 +136,7 @@ static const char bin2hex[] = { '0', '1', '2', '3',
 				'4', '5', '6', '7',
 				'8', '9', 'a', 'b',
 				'c', 'd', 'e', 'f' };
-
+#define FC_ARCHITECTURE
 static FcChar8 *
 FcDirCacheBasename (const FcChar8 * dir, FcChar8 cache_base[CACHEBASE_LEN])
 {

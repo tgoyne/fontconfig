@@ -5,7 +5,7 @@
 #define HAVE_FT_GET_PS_FONT_INFO 1
 #define HAVE_FT_HAS_PS_GLYPH_NAMES 1
 #define HAVE_FT_SELECT_SIZE 1
-#define HAVE_FT_GET_BDF_PROPERTY 1
+//#define HAVE_FT_GET_BDF_PROPERTY 1
 #define HAVE_INTTYPES_H 1
 #define HAVE_MEMMOVE 1
 
@@ -37,3 +37,4 @@
 
 /* Define to `int' if <sys/types.h> does not define. */
 /* #undef pid_t */
+//
