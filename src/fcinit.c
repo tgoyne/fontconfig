@@ -57,7 +57,6 @@ FcGetVersion (void)
 FcConfig *
 FcInitLoadConfig (void)
 {
-    FcInitDebug ();
     FcConfig *config = FcConfigCreate ();
     FcInitFallbackConfig (config);
     return config;
