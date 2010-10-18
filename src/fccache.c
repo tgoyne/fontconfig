@@ -22,7 +22,6 @@
  */
 
 #include "fcint.h"
-#include "../fc-arch/fcarch.h"
 #include <stdio.h>
 #include <fcntl.h>
 #include <dirent.h>
@@ -52,7 +51,7 @@ static void MD5Update(struct MD5Context *ctx, const unsigned char *buf, unsigned
 static void MD5Final(unsigned char digest[16], struct MD5Context *ctx);
 static void MD5Transform(FcChar32 buf[4], FcChar32 in[16]);
 
-#define CACHEBASE_LEN (1 + 32 + 1 + sizeof (FC_ARCHITECTURE) + sizeof (FC_CACHE_SUFFIX))
+#define CACHEBASE_LEN 1024
 
 #ifdef _WIN32
 
