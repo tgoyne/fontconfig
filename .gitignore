@@ -94,3 +94,4 @@ fcalias.h
 fcaliastail.h
 src/fcftalias.h
 src/fcftaliastail.h
+*.exe
