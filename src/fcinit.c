@@ -35,7 +35,7 @@ FcInitFallbackConfig (FcConfig *config)
     if (!FcConfigAddDir (config, (FcChar8 *)dir))
         goto bail1;
 
-    SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, dir);
+    SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, dir);
     strcat(dir, "\\fontconfig");
     if (!FcConfigAddCacheDir (config, (FcChar8 *)dir))
         goto bail1;
