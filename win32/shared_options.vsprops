@@ -8,6 +8,5 @@
 		Name="VCCLCompilerTool"
 		AdditionalIncludeDirectories="$(ProjectDir)\include"
 		PreprocessorDefinitions="HAVE_CONFIG_H"
-		DisableLanguageExtensions="true"
 	/>
 </VisualStudioPropertySheet>
