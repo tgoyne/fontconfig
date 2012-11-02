@@ -98,3 +98,9 @@ fcalias.h
 fcaliastail.h
 src/fcftalias.h
 src/fcftaliastail.h
+
+build/
+fontconfig.ncb
+fontconfig.sln
+fontconfig.suo
+*.user
