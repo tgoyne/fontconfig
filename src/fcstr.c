@@ -73,8 +73,11 @@ FcStrFree (FcChar8 *s)
     free (s);
 }
 
-
+#ifndef _WIN32
 #include "../fc-case/fccase.h"
+#else
+#include "fccase.h"
+#endif
 
 #define FcCaseFoldUpperCount(cf) \
     ((cf)->method == FC_CASE_FOLD_FULL ? 1 : (cf)->count)

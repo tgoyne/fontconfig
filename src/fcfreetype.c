@@ -2040,7 +2040,11 @@ FcFreeTypeGetPrivateMap (FT_Encoding encoding)
     return 0;
 }
 
+#ifndef _WIN32
 #include "../fc-glyphname/fcglyphname.h"
+#else
+#include "fcglyphname.h"
+#endif
 
 static FcChar32
 FcHashGlyphName (const FcChar8 *name)
