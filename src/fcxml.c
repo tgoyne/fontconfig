@@ -23,6 +23,9 @@
  */
 
 #include "fcint.h"
+
+#ifndef _WIN32
+
 #include <fcntl.h>
 #include <stdarg.h>
 #include <dirent.h>
@@ -56,6 +59,8 @@
 #include <mbstring.h>
 #endif
 
+#endif
+
 static void
 FcExprDestroy (FcExpr *e);
 
@@ -68,6 +73,8 @@ FcTestDestroy (FcTest *test)
     FcMemFree (FC_MEM_TEST, sizeof (FcTest));
     free (test);
 }
+
+#ifndef _WIN32
 
 static FcExpr *
 FcExprCreateInteger (FcConfig *config, int i)
@@ -190,6 +197,8 @@ FcExprCreateOp (FcConfig *config, FcExpr *left, FcOp op, FcExpr *right)
     return e;
 }
 
+#endif // _WIN32
+
 static void
 FcExprDestroy (FcExpr *e)
 {
@@ -271,6 +280,8 @@ FcEditDestroy (FcEdit *e)
 	FcExprDestroy (e->expr);
     free (e);
 }
+
+#ifndef _WIN32
 
 typedef enum _FcElement {
     FcElementNone,
@@ -2994,3 +3005,14 @@ bail0:
 #define __fcxml__
 #include "fcaliastail.h"
 #undef __fcxml__
+
+#else // _WIN32
+FcBool
+FcConfigParseAndLoadDir (FcConfig        *config,
+			 const FcChar8        *name,
+			 const FcChar8        *dir,
+			 FcBool                complain)
+{
+    return FcConfigParseAndLoad (config, name, complain);
+}
+#endif

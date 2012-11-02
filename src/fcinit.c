@@ -25,6 +25,29 @@
 #include "fcint.h"
 #include <stdlib.h>
 
+#ifdef _WIN32
+#include "config.h"
+#include <shlobj.h>
+
+static void
+FcInitFallbackConfig (FcConfig *config)
+{
+    char dir[MAX_PATH+12];
+    SHGetFolderPath(NULL, CSIDL_FONTS, NULL, 0, dir);
+
+    if (!FcConfigAddDir (config, (FcChar8 *)dir))
+	goto bail1;
+
+    SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, dir);
+    strcat(dir, "\\fontconfig");
+    if (!FcConfigAddCacheDir (config, (FcChar8 *)dir))
+	goto bail1;
+    return;
+
+bail1:
+    FcConfigDestroy (config);
+}
+#else
 static FcConfig *
 FcInitFallbackConfig (void)
 {
@@ -44,6 +67,7 @@ bail1:
 bail0:
     return 0;
 }
+#endif
 
 int
 FcGetVersion (void)
@@ -64,6 +88,9 @@ FcInitLoadConfig (void)
     if (!config)
 	return NULL;
 
+#ifdef _WIN32
+    FcInitFallbackConfig(config);
+#else
     if (!FcConfigParseAndLoad (config, 0, FcTrue))
     {
 	FcConfigDestroy (config);
@@ -104,9 +131,19 @@ FcInitLoadConfig (void)
 	}
 	free (prefix);
     }
+#endif
 
     return config;
 }
+
+#ifdef _WIN32
+FcBool
+FcConfigParseAndLoad (FcConfig *config, const FcChar8 *file, FcBool complain)
+{
+    FcInitFallbackConfig (config);
+    return FcTrue;
+}
+#endif
 
 /*
  * Load the configuration files and scan for available fonts
