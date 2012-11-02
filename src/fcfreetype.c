@@ -1967,7 +1967,7 @@ const FcCharMap *FcFreeTypeGetPrivateMap(FT_Encoding encoding) {
     return 0;
 }
 
-#include "../fc-glyphname/fcglyphname.h"
+#include "fcglyphname.h"
 
 static FcChar32 FcHashGlyphName(const FcChar8 *name) {
     FcChar32 h = 0;

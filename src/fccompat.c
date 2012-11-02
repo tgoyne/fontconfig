@@ -107,10 +107,10 @@ int FcOpen(const char *pathname, int flags, ...) {
 
     if (flags & O_CREAT) {
         va_list ap;
-        mode_t mode;
+        int mode;
 
         va_start(ap, flags);
-        mode = (mode_t)va_arg(ap, int);
+        mode = va_arg(ap, int);
         va_end(ap);
 
         fd = open(pathname, flags | FC_O_CLOEXEC | FC_O_LARGEFILE, mode);

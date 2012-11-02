@@ -48,7 +48,7 @@ FcChar8 *FcStrPlus(const FcChar8 *s1, const FcChar8 *s2) {
 
 void FcStrFree(FcChar8 *s) { free(s); }
 
-#include "../fc-case/fccase.h"
+#include "fccase.h"
 
 #define FcCaseFoldUpperCount(cf)                                               \
     ((cf)->method == FC_CASE_FOLD_FULL ? 1 : (cf)->count)
