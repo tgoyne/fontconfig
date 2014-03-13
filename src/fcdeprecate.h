@@ -27,10 +27,8 @@
 #ifndef _FCDEPRECATE_H_
 #define _FCDEPRECATE_H_
 
-FcPublic int
-FcConfigGetRescanInverval (FcConfig *config);
+FcPublic int FcConfigGetRescanInverval(FcConfig *config);
 
-FcPublic FcBool
-FcConfigSetRescanInverval (FcConfig *config, int rescanInterval);
+FcPublic FcBool FcConfigSetRescanInverval(FcConfig *config, int rescanInterval);
 
 #endif /* _FCDEPRECATE_H_ */

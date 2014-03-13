@@ -25,203 +25,155 @@
 #include "fcint.h"
 #include <dirent.h>
 
-FcBool
-FcFileIsDir (const FcChar8 *file)
-{
-    struct stat	    statb;
+FcBool FcFileIsDir(const FcChar8 *file) {
+    struct stat statb;
 
-    if (FcStat (file, &statb) != 0)
-	return FcFalse;
+    if (FcStat(file, &statb) != 0) return FcFalse;
     return S_ISDIR(statb.st_mode);
 }
 
-FcBool
-FcFileIsLink (const FcChar8 *file)
-{
+FcBool FcFileIsLink(const FcChar8 *file) {
 #if HAVE_LSTAT
     struct stat statb;
 
-    if (lstat ((const char *)file, &statb) != 0)
-	return FcFalse;
-    return S_ISLNK (statb.st_mode);
+    if (lstat((const char *)file, &statb) != 0) return FcFalse;
+    return S_ISLNK(statb.st_mode);
 #else
     return FcFalse;
 #endif
 }
 
-FcBool
-FcFileIsFile (const FcChar8 *file)
-{
+FcBool FcFileIsFile(const FcChar8 *file) {
     struct stat statb;
 
-    if (FcStat (file, &statb) != 0)
-	return FcFalse;
-    return S_ISREG (statb.st_mode);
+    if (FcStat(file, &statb) != 0) return FcFalse;
+    return S_ISREG(statb.st_mode);
 }
 
-static FcBool
-FcFileScanFontConfig (FcFontSet		*set,
-		      FcBlanks		*blanks,
-		      const FcChar8	*file,
-		      FcConfig		*config)
-{
-    FcPattern	*font;
-    FcBool	ret = FcTrue;
-    int		id;
-    int		count = 0;
+static FcBool FcFileScanFontConfig(FcFontSet *set, FcBlanks *blanks,
+                                   const FcChar8 *file, FcConfig *config) {
+    FcPattern *font;
+    FcBool ret = FcTrue;
+    int id;
+    int count = 0;
 
     id = 0;
-    do
-    {
-	font = 0;
-	/*
-	 * Nothing in the cache, scan the file
-	 */
-	if (FcDebug () & FC_DBG_SCAN)
-	{
-	    printf ("\tScanning file %s...", file);
-	    fflush (stdout);
-	}
-	font = FcFreeTypeQuery (file, id, blanks, &count);
-	if (FcDebug () & FC_DBG_SCAN)
-	    printf ("done\n");
+    do {
+        font = 0;
+        /*
+         * Nothing in the cache, scan the file
+         */
+        if (FcDebug() & FC_DBG_SCAN) {
+            printf("\tScanning file %s...", file);
+            fflush(stdout);
+        }
+        font = FcFreeTypeQuery(file, id, blanks, &count);
+        if (FcDebug() & FC_DBG_SCAN) printf("done\n");
 
-	/*
-	 * Edit pattern with user-defined rules
-	 */
-	if (font && config && !FcConfigSubstitute (config, font, FcMatchScan))
-	{
-	    FcPatternDestroy (font);
-	    font = NULL;
-	    ret = FcFalse;
-	}
+        /*
+         * Edit pattern with user-defined rules
+         */
+        if (font && config && !FcConfigSubstitute(config, font, FcMatchScan)) {
+            FcPatternDestroy(font);
+            font = NULL;
+            ret = FcFalse;
+        }
 
-	/*
-	 * Add the font
-	 */
-	if (font)
-	{
-	    if (FcDebug() & FC_DBG_SCANV)
-	    {
-		printf ("Final font pattern:\n");
-		FcPatternPrint (font);
-	    }
-	    if (!FcFontSetAdd (set, font))
-	    {
-		FcPatternDestroy (font);
-		font = NULL;
-		ret = FcFalse;
-	    }
-	}
-	else if (font)
-	    FcPatternDestroy (font);
-	id++;
+        /*
+         * Add the font
+         */
+        if (font) {
+            if (FcDebug() & FC_DBG_SCANV) {
+                printf("Final font pattern:\n");
+                FcPatternPrint(font);
+            }
+            if (!FcFontSetAdd(set, font)) {
+                FcPatternDestroy(font);
+                font = NULL;
+                ret = FcFalse;
+            }
+        } else if (font)
+            FcPatternDestroy(font);
+        id++;
     } while (font && ret && id < count);
     return ret;
 }
 
-FcBool
-FcFileScanConfig (FcFontSet	*set,
-		  FcStrSet	*dirs,
-		  FcBlanks	*blanks,
-		  const FcChar8	*file,
-		  FcConfig	*config)
-{
-    if (FcFileIsDir (file))
-	return FcStrSetAdd (dirs, file);
-    else
-    {
-	if (set)
-	    return FcFileScanFontConfig (set, blanks, file, config);
-	else
-	    return FcTrue;
+FcBool FcFileScanConfig(FcFontSet *set, FcStrSet *dirs, FcBlanks *blanks,
+                        const FcChar8 *file, FcConfig *config) {
+    if (FcFileIsDir(file))
+        return FcStrSetAdd(dirs, file);
+    else {
+        if (set)
+            return FcFileScanFontConfig(set, blanks, file, config);
+        else
+            return FcTrue;
     }
 }
 
-FcBool
-FcFileScan (FcFontSet	    *set,
-	    FcStrSet	    *dirs,
-	    FcFileCache	    *cache FC_UNUSED,
-	    FcBlanks	    *blanks,
-	    const FcChar8   *file,
-	    FcBool	    force FC_UNUSED)
-{
-    return FcFileScanConfig (set, dirs, blanks, file, FcConfigGetCurrent ());
+FcBool FcFileScan(FcFontSet *set, FcStrSet *dirs, FcFileCache *cache FC_UNUSED,
+                  FcBlanks *blanks, const FcChar8 *file,
+                  FcBool force FC_UNUSED) {
+    return FcFileScanConfig(set, dirs, blanks, file, FcConfigGetCurrent());
 }
 
 /*
  * Strcmp helper that takes pointers to pointers, copied from qsort(3) manpage
  */
-static int
-cmpstringp(const void *p1, const void *p2)
-{
-    return strcmp(* (char **) p1, * (char **) p2);
+static int cmpstringp(const void *p1, const void *p2) {
+    return strcmp(*(char **)p1, *(char **)p2);
 }
 
-FcBool
-FcDirScanConfig (FcFontSet	*set,
-		 FcStrSet	*dirs,
-		 FcBlanks	*blanks,
-		 const FcChar8	*dir,
-		 FcBool		force, /* XXX unused */
-		 FcConfig	*config)
-{
-    DIR			*d;
-    struct dirent	*e;
-    FcStrSet		*files;
-    FcChar8		*file;
-    FcChar8		*base;
-    FcBool		ret = FcTrue;
-    int			i;
+FcBool FcDirScanConfig(FcFontSet *set, FcStrSet *dirs, FcBlanks *blanks,
+                       const FcChar8 *dir, FcBool force, /* XXX unused */
+                       FcConfig *config) {
+    DIR *d;
+    struct dirent *e;
+    FcStrSet *files;
+    FcChar8 *file;
+    FcChar8 *base;
+    FcBool ret = FcTrue;
+    int i;
 
-    if (!force)
-	return FcFalse;
+    if (!force) return FcFalse;
 
-    if (!set && !dirs)
-	return FcTrue;
+    if (!set && !dirs) return FcTrue;
 
-    if (!blanks)
-	blanks = FcConfigGetBlanks (config);
+    if (!blanks) blanks = FcConfigGetBlanks(config);
 
     /* freed below */
-    file = (FcChar8 *) malloc (strlen ((char *) dir) + 1 + FC_MAX_FILE_LEN + 1);
+    file = (FcChar8 *)malloc(strlen((char *)dir) + 1 + FC_MAX_FILE_LEN + 1);
     if (!file) {
-	ret = FcFalse;
-	goto bail;
+        ret = FcFalse;
+        goto bail;
     }
 
-    strcpy ((char *) file, (char *) dir);
-    strcat ((char *) file, "/");
-    base = file + strlen ((char *) file);
+    strcpy((char *)file, (char *)dir);
+    strcat((char *)file, "/");
+    base = file + strlen((char *)file);
 
-    if (FcDebug () & FC_DBG_SCAN)
-	printf ("\tScanning dir %s\n", dir);
-	
-    d = opendir ((char *) dir);
-    if (!d)
-    {
-	/* Don't complain about missing directories */
-	if (errno != ENOENT)
-	    ret = FcFalse;
-	goto bail;
+    if (FcDebug() & FC_DBG_SCAN) printf("\tScanning dir %s\n", dir);
+
+    d = opendir((char *)dir);
+    if (!d) {
+        /* Don't complain about missing directories */
+        if (errno != ENOENT) ret = FcFalse;
+        goto bail;
     }
 
-    files = FcStrSetCreate ();
-    if (!files)
-    {
-	ret = FcFalse;
-	goto bail1;
+    files = FcStrSetCreate();
+    if (!files) {
+        ret = FcFalse;
+        goto bail1;
     }
-    while ((e = readdir (d)))
-    {
-	if (e->d_name[0] != '.' && strlen (e->d_name) < FC_MAX_FILE_LEN)
-	{
-	    strcpy ((char *) base, (char *) e->d_name);
-	    if (!FcStrSetAdd (files, file)) {
-		ret = FcFalse;
-		goto bail2;
-	    }
-	}
+    while ((e = readdir(d))) {
+        if (e->d_name[0] != '.' && strlen(e->d_name) < FC_MAX_FILE_LEN) {
+            strcpy((char *)base, (char *)e->d_name);
+            if (!FcStrSetAdd(files, file)) {
+                ret = FcFalse;
+                goto bail2;
+            }
+        }
     }
 
     /*
@@ -233,119 +185,98 @@ FcDirScanConfig (FcFontSet	*set,
      * Scan file files to build font patterns
      */
     for (i = 0; i < files->num; i++)
-	FcFileScanConfig (set, dirs, blanks, files->strs[i], config);
+        FcFileScanConfig(set, dirs, blanks, files->strs[i], config);
 
 bail2:
-    FcStrSetDestroy (files);
+    FcStrSetDestroy(files);
 bail1:
-    closedir (d);
+    closedir(d);
 bail:
-    if (file)
-	free (file);
+    if (file) free(file);
 
     return ret;
 }
 
-FcBool
-FcDirScan (FcFontSet	    *set,
-	   FcStrSet	    *dirs,
-	   FcFileCache	    *cache, /* XXX unused */
-	   FcBlanks	    *blanks,
-	   const FcChar8    *dir,
-	   FcBool	    force /* XXX unused */)
-{
-    if (cache || !force)
-	return FcFalse;
+FcBool FcDirScan(FcFontSet *set, FcStrSet *dirs,
+                 FcFileCache *cache, /* XXX unused */
+                 FcBlanks *blanks, const FcChar8 *dir,
+                 FcBool force /* XXX unused */) {
+    if (cache || !force) return FcFalse;
 
-    return FcDirScanConfig (set, dirs, blanks, dir, force, FcConfigGetCurrent ());
+    return FcDirScanConfig(set, dirs, blanks, dir, force, FcConfigGetCurrent());
 }
 
 /*
  * Scan the specified directory and construct a cache of its contents
  */
-FcCache *
-FcDirCacheScan (const FcChar8 *dir, FcConfig *config)
-{
-    FcStrSet		*dirs;
-    FcFontSet		*set;
-    FcCache		*cache = NULL;
-    struct stat		dir_stat;
+FcCache *FcDirCacheScan(const FcChar8 *dir, FcConfig *config) {
+    FcStrSet *dirs;
+    FcFontSet *set;
+    FcCache *cache = NULL;
+    struct stat dir_stat;
 
-    if (FcDebug () & FC_DBG_FONTSET)
-	printf ("cache scan dir %s\n", dir);
+    if (FcDebug() & FC_DBG_FONTSET) printf("cache scan dir %s\n", dir);
 
-    if (FcStatChecksum (dir, &dir_stat) < 0)
-	goto bail;
+    if (FcStatChecksum(dir, &dir_stat) < 0) goto bail;
 
     set = FcFontSetCreate();
-    if (!set)
-	goto bail;
+    if (!set) goto bail;
 
-    dirs = FcStrSetCreate ();
-    if (!dirs)
-	goto bail1;
+    dirs = FcStrSetCreate();
+    if (!dirs) goto bail1;
 
     /*
      * Scan the dir
      */
-    if (!FcDirScanConfig (set, dirs, NULL, dir, FcTrue, config))
-	goto bail2;
+    if (!FcDirScanConfig(set, dirs, NULL, dir, FcTrue, config)) goto bail2;
 
     /*
      * Build the cache object
      */
-    cache = FcDirCacheBuild (set, dir, &dir_stat, dirs);
-    if (!cache)
-	goto bail2;
+    cache = FcDirCacheBuild(set, dir, &dir_stat, dirs);
+    if (!cache) goto bail2;
 
     /*
      * Write out the cache file, ignoring any troubles
      */
-    FcDirCacheWrite (cache, config);
+    FcDirCacheWrite(cache, config);
 
- bail2:
-    FcStrSetDestroy (dirs);
- bail1:
-    FcFontSetDestroy (set);
- bail:
+bail2:
+    FcStrSetDestroy(dirs);
+bail1:
+    FcFontSetDestroy(set);
+bail:
     return cache;
 }
 
-FcCache *
-FcDirCacheRescan (const FcChar8 *dir, FcConfig *config)
-{
-    FcCache *cache = FcDirCacheLoad (dir, config, NULL);
+FcCache *FcDirCacheRescan(const FcChar8 *dir, FcConfig *config) {
+    FcCache *cache = FcDirCacheLoad(dir, config, NULL);
     FcCache *new = NULL;
     struct stat dir_stat;
     FcStrSet *dirs;
 
-    if (!cache)
-	return NULL;
-    if (FcStatChecksum (dir, &dir_stat) < 0)
-	goto bail;
-    dirs = FcStrSetCreate ();
-    if (!dirs)
-	goto bail;
+    if (!cache) return NULL;
+    if (FcStatChecksum(dir, &dir_stat) < 0) goto bail;
+    dirs = FcStrSetCreate();
+    if (!dirs) goto bail;
 
     /*
      * Scan the dir
      */
-    if (!FcDirScanConfig (NULL, dirs, NULL, dir, FcTrue, config))
-	goto bail1;
+    if (!FcDirScanConfig(NULL, dirs, NULL, dir, FcTrue, config)) goto bail1;
     /*
      * Rebuild the cache object
      */
-    new = FcDirCacheRebuild (cache, &dir_stat, dirs);
-    if (!new)
-	goto bail1;
-    FcDirCacheUnload (cache);
+    new = FcDirCacheRebuild(cache, &dir_stat, dirs);
+    if (!new) goto bail1;
+    FcDirCacheUnload(cache);
     /*
      * Write out the cache file, ignoring any troubles
      */
-    FcDirCacheWrite (new, config);
+    FcDirCacheWrite(new, config);
 
 bail1:
-    FcStrSetDestroy (dirs);
+    FcStrSetDestroy(dirs);
 bail:
     return new;
 }
@@ -353,24 +284,19 @@ bail:
 /*
  * Read (or construct) the cache for a directory
  */
-FcCache *
-FcDirCacheRead (const FcChar8 *dir, FcBool force, FcConfig *config)
-{
-    FcCache		*cache = NULL;
+FcCache *FcDirCacheRead(const FcChar8 *dir, FcBool force, FcConfig *config) {
+    FcCache *cache = NULL;
 
     /* Try to use existing cache file */
-    if (!force)
-	cache = FcDirCacheLoad (dir, config, NULL);
+    if (!force) cache = FcDirCacheLoad(dir, config, NULL);
 
     /* Not using existing cache file, construct new cache */
-    if (!cache)
-	cache = FcDirCacheScan (dir, config);
+    if (!cache) cache = FcDirCacheScan(dir, config);
 
     return cache;
 }
 
-FcBool
-FcDirSave (FcFontSet *set FC_UNUSED, FcStrSet * dirs FC_UNUSED, const FcChar8 *dir FC_UNUSED)
-{
+FcBool FcDirSave(FcFontSet *set FC_UNUSED, FcStrSet *dirs FC_UNUSED,
+                 const FcChar8 *dir FC_UNUSED) {
     return FcFalse; /* XXX deprecated */
 }

@@ -68,102 +68,87 @@
 #define FC_O_NOINHERIT 0
 #endif
 
-#if !defined (HAVE_MKOSTEMP) && !defined(HAVE_MKSTEMP) && !defined(HAVE__MKTEMP_S)
-static int
-mkstemp (char *template)
-{
-    static const char s[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+#if !defined(HAVE_MKOSTEMP) && !defined(HAVE_MKSTEMP)                          \
+    && !defined(HAVE__MKTEMP_S)
+static int mkstemp(char *template) {
+    static const char s[]
+        = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     int fd, i;
     size_t l;
 
-    if (template == NULL)
-    {
-	errno = EINVAL;
-	return -1;
+    if (template == NULL) {
+        errno = EINVAL;
+        return -1;
     }
-    l = strlen (template);
-    if (l < 6 || strcmp (&template[l - 6], "XXXXXX") != 0)
-    {
-	errno = EINVAL;
-	return -1;
+    l = strlen(template);
+    if (l < 6 || strcmp(&template[l - 6], "XXXXXX") != 0) {
+        errno = EINVAL;
+        return -1;
     }
-    do
-    {
-	errno = 0;
-	for (i = l - 6; i < l; i++)
-	{
-	    int r = FcRandom ();
-	    template[i] = s[r % 62];
-	}
-	fd = FcOpen (template, FC_O_BINARY | O_CREAT | O_EXCL | FC_O_TEMPORARY | FC_O_NOINHERIT | O_RDWR, 0600);
+    do {
+        errno = 0;
+        for (i = l - 6; i < l; i++) {
+            int r = FcRandom();
+            template[i] = s[r % 62];
+        }
+        fd = FcOpen(template, FC_O_BINARY | O_CREAT | O_EXCL | FC_O_TEMPORARY
+                              | FC_O_NOINHERIT | O_RDWR,
+                    0600);
     } while (fd < 0 && errno == EEXIST);
-    if (fd >= 0)
-	errno = 0;
+    if (fd >= 0) errno = 0;
 
     return fd;
 }
 #define HAVE_MKSTEMP 1
 #endif
 
-int
-FcOpen(const char *pathname, int flags, ...)
-{
+int FcOpen(const char *pathname, int flags, ...) {
     int fd = -1;
 
-    if (flags & O_CREAT)
-    {
-	va_list ap;
-	mode_t mode;
+    if (flags & O_CREAT) {
+        va_list ap;
+        mode_t mode;
 
-	va_start(ap, flags);
-	mode = (mode_t) va_arg(ap, int);
-	va_end(ap);
+        va_start(ap, flags);
+        mode = (mode_t)va_arg(ap, int);
+        va_end(ap);
 
-	fd = open(pathname, flags | FC_O_CLOEXEC | FC_O_LARGEFILE, mode);
-    }
-    else
-    {
-	fd = open(pathname, flags | FC_O_CLOEXEC | FC_O_LARGEFILE);
+        fd = open(pathname, flags | FC_O_CLOEXEC | FC_O_LARGEFILE, mode);
+    } else {
+        fd = open(pathname, flags | FC_O_CLOEXEC | FC_O_LARGEFILE);
     }
 
     return fd;
 }
 
-int
-FcMakeTempfile (char *template)
-{
+int FcMakeTempfile(char *template) {
     int fd = -1;
 
 #if HAVE_MKOSTEMP
-    fd = mkostemp (template, FC_O_CLOEXEC);
+    fd = mkostemp(template, FC_O_CLOEXEC);
 #elif HAVE_MKSTEMP
-    fd = mkstemp (template);
-#  ifdef F_DUPFD_CLOEXEC
-    if (fd != -1)
-    {
-	int newfd = fcntl(fd, F_DUPFD_CLOEXEC, STDIN_FILENO);
+    fd = mkstemp(template);
+#ifdef F_DUPFD_CLOEXEC
+    if (fd != -1) {
+        int newfd = fcntl(fd, F_DUPFD_CLOEXEC, STDIN_FILENO);
 
-	close(fd);
-	fd = newfd;
+        close(fd);
+        fd = newfd;
     }
-#  elif defined(FD_CLOEXEC)
-    if (fd != -1)
-    {
-	fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
+#elif defined(FD_CLOEXEC)
+    if (fd != -1) {
+        fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
     }
-#  endif
+#endif
 #elif HAVE__MKTEMP_S
-   if (_mktemp_s(template, strlen(template) + 1) != 0)
-       return -1;
-   fd = FcOpen(template, O_RDWR | O_EXCL | O_CREAT, 0600);
+    if (_mktemp_s(template, strlen(template) + 1) != 0) return -1;
+    fd = FcOpen(template, O_RDWR | O_EXCL | O_CREAT, 0600);
 #endif
 
     return fd;
 }
 
-int32_t
-FcRandom(void)
-{
+int32_t FcRandom(void) {
     int32_t result;
 
 #if HAVE_RANDOM_R
@@ -175,55 +160,51 @@ FcRandom(void)
     long res;
 #endif
 
-    if (initialized != FcTrue)
-    {
+    if (initialized != FcTrue) {
 #ifdef _AIX
-	initstate_r (time (NULL), statebuf, 256, &retval, &fcrandbuf);
+        initstate_r(time(NULL), statebuf, 256, &retval, &fcrandbuf);
 #else
-	initstate_r (time (NULL), statebuf, 256, &fcrandbuf);
+        initstate_r(time(NULL), statebuf, 256, &fcrandbuf);
 #endif
-	initialized = FcTrue;
+        initialized = FcTrue;
     }
 
 #ifdef _AIX
-    random_r (&res, &fcrandbuf);
+    random_r(&res, &fcrandbuf);
     result = (int32_t)res;
 #else
-    random_r (&fcrandbuf, &result);
+    random_r(&fcrandbuf, &result);
 #endif
 #elif HAVE_RANDOM
     static char statebuf[256];
     char *state;
     static FcBool initialized = FcFalse;
 
-    if (initialized != FcTrue)
-    {
-	state = initstate (time (NULL), statebuf, 256);
-	initialized = FcTrue;
-    }
-    else
-	state = setstate (statebuf);
+    if (initialized != FcTrue) {
+        state = initstate(time(NULL), statebuf, 256);
+        initialized = FcTrue;
+    } else
+        state = setstate(statebuf);
 
-    result = random ();
+    result = random();
 
-    setstate (state);
+    setstate(state);
 #elif HAVE_LRAND48
-    result = lrand48 ();
+    result = lrand48();
 #elif HAVE_RAND_R
-    static unsigned int seed = time (NULL);
+    static unsigned int seed = time(NULL);
 
-    result = rand_r (&seed);
+    result = rand_r(&seed);
 #elif HAVE_RAND
     static FcBool initialized = FcFalse;
 
-    if (initialized != FcTrue)
-    {
-	srand (time (NULL));
-	initialized = FcTrue;
+    if (initialized != FcTrue) {
+        srand(time(NULL));
+        initialized = FcTrue;
     }
-    result = rand ();
+    result = rand();
 #else
-# error no random number generator function available.
+#error no random number generator function available.
 #endif
 
     return result;
@@ -231,27 +212,24 @@ FcRandom(void)
 
 #ifdef _WIN32
 #include <direct.h>
-#define mkdir(path,mode) _mkdir(path)
+#define mkdir(path, mode) _mkdir(path)
 #endif
 
-FcBool
-FcMakeDirectory (const FcChar8 *dir)
-{
+FcBool FcMakeDirectory(const FcChar8 *dir) {
     FcChar8 *parent;
-    FcBool  ret;
+    FcBool ret;
 
-    if (strlen ((char *) dir) == 0)
-	return FcFalse;
+    if (strlen((char *)dir) == 0) return FcFalse;
 
-    parent = FcStrDirname (dir);
-    if (!parent)
-	return FcFalse;
-    if (access ((char *) parent, F_OK) == 0)
-	ret = mkdir ((char *) dir, 0755) == 0 && chmod ((char *) dir, 0755) == 0;
-    else if (access ((char *) parent, F_OK) == -1)
-	ret = FcMakeDirectory (parent) && (mkdir ((char *) dir, 0755) == 0) && chmod ((char *) dir, 0755) == 0;
+    parent = FcStrDirname(dir);
+    if (!parent) return FcFalse;
+    if (access((char *)parent, F_OK) == 0)
+        ret = mkdir((char *)dir, 0755) == 0 && chmod((char *)dir, 0755) == 0;
+    else if (access((char *)parent, F_OK) == -1)
+        ret = FcMakeDirectory(parent) && (mkdir((char *)dir, 0755) == 0)
+              && chmod((char *)dir, 0755) == 0;
     else
-	ret = FcFalse;
-    FcStrFree (parent);
+        ret = FcFalse;
+    FcStrFree(parent);
     return ret;
 }

@@ -24,11 +24,11 @@
 
 #include "fcint.h"
 
-static unsigned int
-FcObjectTypeHash (register const char *str, register unsigned int len);
+static unsigned int FcObjectTypeHash(register const char *str,
+                                     register unsigned int len);
 
 static const struct FcObjectTypeInfo *
-FcObjectTypeLookup (register const char *str, register unsigned int len);
+FcObjectTypeLookup(register const char *str, register unsigned int len);
 
 #include "fcobjshash.h"
 
@@ -44,94 +44,72 @@ struct FcObjectOtherTypeInfo {
     FcObject id;
 } *other_types;
 
-static FcObjectType *
-_FcObjectLookupOtherTypeByName (const char *str, FcObject *id)
-{
+static FcObjectType *_FcObjectLookupOtherTypeByName(const char *str,
+                                                    FcObject *id) {
     struct FcObjectOtherTypeInfo *ots, *ot;
 
 retry:
-    ots = fc_atomic_ptr_get (&other_types);
+    ots = fc_atomic_ptr_get(&other_types);
 
     for (ot = ots; ot; ot = ot->next)
-	if (0 == strcmp (ot->object.object, str))
-	    break;
+        if (0 == strcmp(ot->object.object, str)) break;
 
-    if (!ot)
-    {
-	ot = malloc (sizeof (*ot));
-	if (!ot)
-	    return NULL;
+    if (!ot) {
+        ot = malloc(sizeof(*ot));
+        if (!ot) return NULL;
 
-	ot->object.object = (const char *) FcStrdup (str);
-	ot->object.type = FcTypeUnknown;
-	ot->id = fc_atomic_int_add (next_id, +1);
-	ot->next = ots;
+        ot->object.object = (const char *)FcStrdup(str);
+        ot->object.type = FcTypeUnknown;
+        ot->id = fc_atomic_int_add(next_id, +1);
+        ot->next = ots;
 
-	if (!fc_atomic_ptr_cmpexch (&other_types, ots, ot)) {
-	    free (ot);
-	    goto retry;
-	}
+        if (!fc_atomic_ptr_cmpexch(&other_types, ots, ot)) {
+            free(ot);
+            goto retry;
+        }
     }
 
-    if (id)
-      *id = ot->id;
+    if (id) *id = ot->id;
 
     return &ot->object;
 }
 
-FcObject
-FcObjectLookupBuiltinIdByName (const char *str)
-{
-    const struct FcObjectTypeInfo *o = FcObjectTypeLookup (str, strlen (str));
+FcObject FcObjectLookupBuiltinIdByName(const char *str) {
+    const struct FcObjectTypeInfo *o = FcObjectTypeLookup(str, strlen(str));
 
-    if (o)
-	return o->id;
+    if (o) return o->id;
 
     return 0;
 }
 
-FcObject
-FcObjectLookupIdByName (const char *str)
-{
-    const struct FcObjectTypeInfo *o = FcObjectTypeLookup (str, strlen (str));
+FcObject FcObjectLookupIdByName(const char *str) {
+    const struct FcObjectTypeInfo *o = FcObjectTypeLookup(str, strlen(str));
     FcObject id;
-    if (o)
-	return o->id;
+    if (o) return o->id;
 
-    if (_FcObjectLookupOtherTypeByName (str, &id))
-	return id;
+    if (_FcObjectLookupOtherTypeByName(str, &id)) return id;
 
     return 0;
 }
 
-const char *
-FcObjectLookupOtherNameById (FcObject id)
-{
+const char *FcObjectLookupOtherNameById(FcObject id) {
     struct FcObjectOtherTypeInfo *ot;
 
-    for (ot = fc_atomic_ptr_get (&other_types); ot; ot = ot->next)
-	if (ot->id == id)
-	    return ot->object.object;
+    for (ot = fc_atomic_ptr_get(&other_types); ot; ot = ot->next)
+        if (ot->id == id) return ot->object.object;
 
     return NULL;
 }
 
-const FcObjectType *
-FcObjectLookupOtherTypeByName (const char *str)
-{
-    return _FcObjectLookupOtherTypeByName (str, NULL);
+const FcObjectType *FcObjectLookupOtherTypeByName(const char *str) {
+    return _FcObjectLookupOtherTypeByName(str, NULL);
 }
 
-FcPrivate const FcObjectType *
-FcObjectLookupOtherTypeById (FcObject id)
-{
+FcPrivate const FcObjectType *FcObjectLookupOtherTypeById(FcObject id) {
     struct FcObjectOtherTypeInfo *ot;
 
-    for (ot = fc_atomic_ptr_get (&other_types); ot; ot = ot->next)
-	if (ot->id == id)
-	    return &ot->object;
+    for (ot = fc_atomic_ptr_get(&other_types); ot; ot = ot->next)
+        if (ot->id == id) return &ot->object;
 
     return NULL;
 }
-
-

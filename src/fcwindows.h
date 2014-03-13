@@ -32,13 +32,13 @@
 #endif
 
 #ifdef _WIN32
-#  ifndef _WIN32_WINNT
-#    define _WIN32_WINNT 0x0500
-#  endif
-#  define WIN32_LEAN_AND_MEAN
-#  define WIN32_EXTRA_LEAN
-#  define STRICT
-#  include <windows.h>
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0500
+#endif
+#define WIN32_LEAN_AND_MEAN
+#define WIN32_EXTRA_LEAN
+#define STRICT
+#include <windows.h>
 #endif
 
 #endif /* _FCWINDOWS_H_ */

@@ -24,61 +24,47 @@
 
 #include "fcint.h"
 
-FcBlanks *
-FcBlanksCreate (void)
-{
-    FcBlanks	*b;
+FcBlanks *FcBlanksCreate(void) {
+    FcBlanks *b;
 
-    b = malloc (sizeof (FcBlanks));
-    if (!b)
-	return 0;
+    b = malloc(sizeof(FcBlanks));
+    if (!b) return 0;
     b->nblank = 0;
     b->sblank = 0;
     b->blanks = 0;
     return b;
 }
 
-void
-FcBlanksDestroy (FcBlanks *b)
-{
-    if (b->blanks)
-	free (b->blanks);
-    free (b);
+void FcBlanksDestroy(FcBlanks *b) {
+    if (b->blanks) free(b->blanks);
+    free(b);
 }
 
-FcBool
-FcBlanksAdd (FcBlanks *b, FcChar32 ucs4)
-{
-    FcChar32	*c;
-    int		sblank;
+FcBool FcBlanksAdd(FcBlanks *b, FcChar32 ucs4) {
+    FcChar32 *c;
+    int sblank;
 
     for (sblank = 0; sblank < b->nblank; sblank++)
-	if (b->blanks[sblank] == ucs4)
-	    return FcTrue;
+        if (b->blanks[sblank] == ucs4) return FcTrue;
 
-    if (b->nblank == b->sblank)
-    {
-	sblank = b->sblank + 32;
-	if (b->blanks)
-	    c = (FcChar32 *) realloc (b->blanks, sblank * sizeof (FcChar32));
-	else
-	    c = (FcChar32 *) malloc (sblank * sizeof (FcChar32));
-	if (!c)
-	    return FcFalse;
-	b->sblank = sblank;
-	b->blanks = c;
+    if (b->nblank == b->sblank) {
+        sblank = b->sblank + 32;
+        if (b->blanks)
+            c = (FcChar32 *)realloc(b->blanks, sblank * sizeof(FcChar32));
+        else
+            c = (FcChar32 *)malloc(sblank * sizeof(FcChar32));
+        if (!c) return FcFalse;
+        b->sblank = sblank;
+        b->blanks = c;
     }
     b->blanks[b->nblank++] = ucs4;
     return FcTrue;
 }
 
-FcBool
-FcBlanksIsMember (FcBlanks *b, FcChar32 ucs4)
-{
-    int	i;
+FcBool FcBlanksIsMember(FcBlanks *b, FcChar32 ucs4) {
+    int i;
 
     for (i = 0; i < b->nblank; i++)
-	if (b->blanks[i] == ucs4)
-	    return FcTrue;
+        if (b->blanks[i] == ucs4) return FcTrue;
     return FcFalse;
 }

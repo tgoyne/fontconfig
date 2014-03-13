@@ -26,187 +26,143 @@
 #include <stdlib.h>
 
 #if defined(FC_ATOMIC_INT_NIL)
-#pragma message("Could not find any system to define atomic_int macros, library may NOT be thread-safe.")
+#pragma message(                                                               \
+    "Could not find any system to define atomic_int macros, library may NOT be thread-safe.")
 #endif
 #if defined(FC_MUTEX_IMPL_NIL)
-#pragma message("Could not find any system to define mutex macros, library may NOT be thread-safe.")
+#pragma message(                                                               \
+    "Could not find any system to define mutex macros, library may NOT be thread-safe.")
 #endif
 #if defined(FC_ATOMIC_INT_NIL) || defined(FC_MUTEX_IMPL_NIL)
 #pragma message("To suppress these warnings, define FC_NO_MT.")
 #endif
 
-static FcConfig *
-FcInitFallbackConfig (void)
-{
-    FcConfig	*config;
+static FcConfig *FcInitFallbackConfig(void) {
+    FcConfig *config;
 
-    config = FcConfigCreate ();
-    if (!config)
-	goto bail0;
-    if (!FcConfigAddDir (config, (FcChar8 *) FC_DEFAULT_FONTS))
-	goto bail1;
-    if (!FcConfigAddCacheDir (config, (FcChar8 *) FC_CACHEDIR))
-	goto bail1;
+    config = FcConfigCreate();
+    if (!config) goto bail0;
+    if (!FcConfigAddDir(config, (FcChar8 *)FC_DEFAULT_FONTS)) goto bail1;
+    if (!FcConfigAddCacheDir(config, (FcChar8 *)FC_CACHEDIR)) goto bail1;
     return config;
 
 bail1:
-    FcConfigDestroy (config);
+    FcConfigDestroy(config);
 bail0:
     return 0;
 }
 
-int
-FcGetVersion (void)
-{
-    return FC_VERSION;
-}
+int FcGetVersion(void) { return FC_VERSION; }
 
 /*
  * Load the configuration files
  */
-FcConfig *
-FcInitLoadOwnConfig (FcConfig *config)
-{
-    if (!config)
-    {
-	config = FcConfigCreate ();
-	if (!config)
-	    return NULL;
+FcConfig *FcInitLoadOwnConfig(FcConfig *config) {
+    if (!config) {
+        config = FcConfigCreate();
+        if (!config) return NULL;
     }
 
-    FcInitDebug ();
+    FcInitDebug();
 
-    if (!FcConfigParseAndLoad (config, 0, FcTrue))
-    {
-	FcConfigDestroy (config);
-	return FcInitFallbackConfig ();
+    if (!FcConfigParseAndLoad(config, 0, FcTrue)) {
+        FcConfigDestroy(config);
+        return FcInitFallbackConfig();
     }
 
-    if (config->cacheDirs && config->cacheDirs->num == 0)
-    {
-	FcChar8 *prefix, *p;
-	size_t plen;
+    if (config->cacheDirs && config->cacheDirs->num == 0) {
+        FcChar8 *prefix, *p;
+        size_t plen;
 
-	fprintf (stderr,
-		 "Fontconfig warning: no <cachedir> elements found. Check configuration.\n");
-	fprintf (stderr,
-		 "Fontconfig warning: adding <cachedir>%s</cachedir>\n",
-		 FC_CACHEDIR);
-	prefix = FcConfigXdgCacheHome ();
-	if (!prefix)
-	    goto bail;
-	plen = strlen ((const char *)prefix);
-	p = realloc (prefix, plen + 12);
-	if (!p)
-	    goto bail;
-	prefix = p;
-	memcpy (&prefix[plen], FC_DIR_SEPARATOR_S "fontconfig", 11);
-	prefix[plen + 11] = 0;
-	fprintf (stderr,
-		 "Fontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n");
+        fprintf(stderr, "Fontconfig warning: no <cachedir> elements found. "
+                        "Check configuration.\n");
+        fprintf(stderr, "Fontconfig warning: adding <cachedir>%s</cachedir>\n",
+                FC_CACHEDIR);
+        prefix = FcConfigXdgCacheHome();
+        if (!prefix) goto bail;
+        plen = strlen((const char *)prefix);
+        p = realloc(prefix, plen + 12);
+        if (!p) goto bail;
+        prefix = p;
+        memcpy(&prefix[plen], FC_DIR_SEPARATOR_S "fontconfig", 11);
+        prefix[plen + 11] = 0;
+        fprintf(stderr, "Fontconfig warning: adding <cachedir "
+                        "prefix=\"xdg\">fontconfig</cachedir>\n");
 
-	if (!FcConfigAddCacheDir (config, (FcChar8 *) FC_CACHEDIR) ||
-	    !FcConfigAddCacheDir (config, (FcChar8 *) prefix))
-	{
-	  bail:
-	    fprintf (stderr,
-		     "Fontconfig error: out of memory");
-	    if (prefix)
-		FcStrFree (prefix);
-	    FcConfigDestroy (config);
-	    return FcInitFallbackConfig ();
-	}
-	FcStrFree (prefix);
+        if (!FcConfigAddCacheDir(config, (FcChar8 *)FC_CACHEDIR)
+            || !FcConfigAddCacheDir(config, (FcChar8 *)prefix)) {
+        bail:
+            fprintf(stderr, "Fontconfig error: out of memory");
+            if (prefix) FcStrFree(prefix);
+            FcConfigDestroy(config);
+            return FcInitFallbackConfig();
+        }
+        FcStrFree(prefix);
     }
 
     return config;
 }
 
-FcConfig *
-FcInitLoadConfig (void)
-{
-    return FcInitLoadOwnConfig (NULL);
-}
+FcConfig *FcInitLoadConfig(void) { return FcInitLoadOwnConfig(NULL); }
 
 /*
  * Load the configuration files and scan for available fonts
  */
-FcConfig *
-FcInitLoadOwnConfigAndFonts (FcConfig *config)
-{
-    config = FcInitLoadOwnConfig (config);
-    if (!config)
-	return 0;
-    if (!FcConfigBuildFonts (config))
-    {
-	FcConfigDestroy (config);
-	return 0;
+FcConfig *FcInitLoadOwnConfigAndFonts(FcConfig *config) {
+    config = FcInitLoadOwnConfig(config);
+    if (!config) return 0;
+    if (!FcConfigBuildFonts(config)) {
+        FcConfigDestroy(config);
+        return 0;
     }
     return config;
 }
 
-FcConfig *
-FcInitLoadConfigAndFonts (void)
-{
-    return FcInitLoadOwnConfigAndFonts (NULL);
+FcConfig *FcInitLoadConfigAndFonts(void) {
+    return FcInitLoadOwnConfigAndFonts(NULL);
 }
 
 /*
  * Initialize the default library configuration
  */
-FcBool
-FcInit (void)
-{
-    return FcConfigInit ();
-}
+FcBool FcInit(void) { return FcConfigInit(); }
 
 /*
  * Free all library-allocated data structures.
  */
-void
-FcFini (void)
-{
-    FcConfigFini ();
-    FcCacheFini ();
-    FcDefaultFini ();
+void FcFini(void) {
+    FcConfigFini();
+    FcCacheFini();
+    FcDefaultFini();
 }
 
 /*
  * Reread the configuration and available font lists
  */
-FcBool
-FcInitReinitialize (void)
-{
-    FcConfig	*config;
+FcBool FcInitReinitialize(void) {
+    FcConfig *config;
 
-    config = FcInitLoadConfigAndFonts ();
-    if (!config)
-	return FcFalse;
-    return FcConfigSetCurrent (config);
+    config = FcInitLoadConfigAndFonts();
+    if (!config) return FcFalse;
+    return FcConfigSetCurrent(config);
 }
 
-FcBool
-FcInitBringUptoDate (void)
-{
-    FcConfig	*config = FcConfigGetCurrent ();
-    time_t	now;
+FcBool FcInitBringUptoDate(void) {
+    FcConfig *config = FcConfigGetCurrent();
+    time_t now;
 
     /*
      * rescanInterval == 0 disables automatic up to date
      */
-    if (config->rescanInterval == 0)
-	return FcTrue;
+    if (config->rescanInterval == 0) return FcTrue;
     /*
      * Check no more often than rescanInterval seconds
      */
-    now = time (0);
-    if (config->rescanTime + config->rescanInterval - now > 0)
-	return FcTrue;
+    now = time(0);
+    if (config->rescanTime + config->rescanInterval - now > 0) return FcTrue;
     /*
      * If up to date, don't reload configuration
      */
-    if (FcConfigUptoDate (0))
-	return FcTrue;
-    return FcInitReinitialize ();
+    if (FcConfigUptoDate(0)) return FcTrue;
+    return FcInitReinitialize();
 }
-

@@ -33,26 +33,21 @@
 
 _FCFUNCPROTOBEGIN
 
-FcPublic FT_UInt
-FcFreeTypeCharIndex (FT_Face face, FcChar32 ucs4);
+FcPublic FT_UInt FcFreeTypeCharIndex(FT_Face face, FcChar32 ucs4);
 
-FcPublic FcCharSet *
-FcFreeTypeCharSetAndSpacing (FT_Face face, FcBlanks *blanks, int *spacing);
-    
-FcPublic FcCharSet *
-FcFreeTypeCharSet (FT_Face face, FcBlanks *blanks);
+FcPublic FcCharSet *FcFreeTypeCharSetAndSpacing(FT_Face face, FcBlanks *blanks,
+                                                int *spacing);
+
+FcPublic FcCharSet *FcFreeTypeCharSet(FT_Face face, FcBlanks *blanks);
 
 FcPublic FcResult
-FcPatternGetFTFace (const FcPattern *p, const char *object, int n, FT_Face *f);
+FcPatternGetFTFace(const FcPattern *p, const char *object, int n, FT_Face *f);
 
 FcPublic FcBool
-FcPatternAddFTFace (FcPattern *p, const char *object, const FT_Face f);
+FcPatternAddFTFace(FcPattern *p, const char *object, const FT_Face f);
 
-FcPublic FcPattern *
-FcFreeTypeQueryFace (const FT_Face  face,
-		     const FcChar8  *file,
-		     int	    id,
-		     FcBlanks	    *blanks);
+FcPublic FcPattern *FcFreeTypeQueryFace(const FT_Face face, const FcChar8 *file,
+                                        int id, FcBlanks *blanks);
 
 _FCFUNCPROTOEND
 

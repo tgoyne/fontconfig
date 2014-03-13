@@ -36,13 +36,11 @@
 #include <config.h>
 #endif
 
-
 /* atomic_int */
 
 /* We need external help for these */
 
 #if 0
-
 
 #elif !defined(FC_NO_MT) && defined(_MSC_VER) || defined(__MINGW32__)
 
@@ -54,18 +52,19 @@
 #ifdef MemoryBarrier
 #define HBMemoryBarrier MemoryBarrier
 #else
-static inline void HBMemoryBarrier (void) {
-  long dummy = 0;
-  InterlockedExchange (&dummy, 1);
+static inline void HBMemoryBarrier(void) {
+    long dummy = 0;
+    InterlockedExchange(&dummy, 1);
 }
 #endif
 
 typedef LONG fc_atomic_int_t;
-#define fc_atomic_int_add(AI, V)	InterlockedExchangeAdd (&(AI), (V))
+#define fc_atomic_int_add(AI, V) InterlockedExchangeAdd(&(AI), (V))
 
-#define fc_atomic_ptr_get(P)		(HBMemoryBarrier (), (void *) *(P))
-#define fc_atomic_ptr_cmpexch(P,O,N)	(InterlockedCompareExchangePointer ((void **) (P), (void *) (N), (void *) (O)) == (void *) (O))
-
+#define fc_atomic_ptr_get(P) (HBMemoryBarrier(), (void *)*(P))
+#define fc_atomic_ptr_cmpexch(P, O, N)                                         \
+    (InterlockedCompareExchangePointer((void **)(P), (void *)(N), (void *)(O)) \
+     == (void *)(O))
 
 #elif !defined(FC_NO_MT) && defined(__APPLE__)
 
@@ -77,27 +76,31 @@ typedef LONG fc_atomic_int_t;
 #endif
 
 typedef int fc_atomic_int_t;
-#define fc_atomic_int_add(AI, V)	(OSAtomicAdd32Barrier ((V), &(AI)) - (V))
+#define fc_atomic_int_add(AI, V) (OSAtomicAdd32Barrier((V), &(AI)) - (V))
 
-#define fc_atomic_ptr_get(P)		(OSMemoryBarrier (), (void *) *(P))
-#if (MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_4 || __IPHONE_VERSION_MIN_REQUIRED >= 20100)
-#define fc_atomic_ptr_cmpexch(P,O,N)	OSAtomicCompareAndSwapPtrBarrier ((void *) (O), (void *) (N), (void **) (P))
+#define fc_atomic_ptr_get(P) (OSMemoryBarrier(), (void *)*(P))
+#if (MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_4                     \
+     || __IPHONE_VERSION_MIN_REQUIRED >= 20100)
+#define fc_atomic_ptr_cmpexch(P, O, N)                                         \
+    OSAtomicCompareAndSwapPtrBarrier((void *)(O), (void *)(N), (void **)(P))
 #else
 #if __ppc64__ || __x86_64__
-#define fc_atomic_ptr_cmpexch(P,O,N)	OSAtomicCompareAndSwap64Barrier ((int64_t) (O), (int64_t) (N), (int64_t*) (P))
+#define fc_atomic_ptr_cmpexch(P, O, N)                                         \
+    OSAtomicCompareAndSwap64Barrier((int64_t)(O), (int64_t)(N), (int64_t *)(P))
 #else
-#define fc_atomic_ptr_cmpexch(P,O,N)	OSAtomicCompareAndSwap32Barrier ((int32_t) (O), (int32_t) (N), (int32_t*) (P))
+#define fc_atomic_ptr_cmpexch(P, O, N)                                         \
+    OSAtomicCompareAndSwap32Barrier((int32_t)(O), (int32_t)(N), (int32_t *)(P))
 #endif
 #endif
 
 #elif !defined(FC_NO_MT) && defined(HAVE_INTEL_ATOMIC_PRIMITIVES)
 
 typedef int fc_atomic_int_t;
-#define fc_atomic_int_add(AI, V)	__sync_fetch_and_add (&(AI), (V))
+#define fc_atomic_int_add(AI, V) __sync_fetch_and_add(&(AI), (V))
 
-#define fc_atomic_ptr_get(P)		(void *) (__sync_synchronize (), *(P))
-#define fc_atomic_ptr_cmpexch(P,O,N)	__sync_bool_compare_and_swap ((P), (O), (N))
-
+#define fc_atomic_ptr_get(P) (void *)(__sync_synchronize(), *(P))
+#define fc_atomic_ptr_cmpexch(P, O, N)                                         \
+    __sync_bool_compare_and_swap((P), (O), (N))
 
 #elif !defined(FC_NO_MT) && defined(HAVE_SOLARIS_ATOMIC_OPS)
 
@@ -105,41 +108,55 @@ typedef int fc_atomic_int_t;
 #include <mbarrier.h>
 
 typedef unsigned int fc_atomic_int_t;
-#define fc_atomic_int_add(AI, V)	( ({__machine_rw_barrier ();}), atomic_add_int_nv (&(AI), (V)) - (V))
+#define fc_atomic_int_add(AI, V)                                               \
+    (({ __machine_rw_barrier(); }), atomic_add_int_nv(&(AI), (V)) - (V))
 
-#define fc_atomic_ptr_get(P)		( ({__machine_rw_barrier ();}), (void *) *(P))
-#define fc_atomic_ptr_cmpexch(P,O,N)	( ({__machine_rw_barrier ();}), atomic_cas_ptr ((P), (O), (N)) == (void *) (O) ? FcTrue : FcFalse)
-
+#define fc_atomic_ptr_get(P)                                                   \
+    (({ __machine_rw_barrier(); }), (void *)*(P))
+#define fc_atomic_ptr_cmpexch(P, O, N)                                         \
+    (({ __machine_rw_barrier(); }),                                            \
+     atomic_cas_ptr((P), (O), (N)) == (void *)(O) ? FcTrue : FcFalse)
 
 #elif !defined(FC_NO_MT)
 
 #define FC_ATOMIC_INT_NIL 1 /* Warn that fallback implementation is in use. */
 typedef volatile int fc_atomic_int_t;
-#define fc_atomic_int_add(AI, V)	(((AI) += (V)) - (V))
+#define fc_atomic_int_add(AI, V) (((AI) += (V)) - (V))
 
-#define fc_atomic_ptr_get(P)		((void *) *(P))
-#define fc_atomic_ptr_cmpexch(P,O,N)	(* (void * volatile *) (P) == (void *) (O) ? (* (void * volatile *) (P) = (void *) (N), FcTrue) : FcFalse)
-
+#define fc_atomic_ptr_get(P) ((void *)*(P))
+#define fc_atomic_ptr_cmpexch(P, O, N)                                         \
+    (*(void *volatile *)(P) == (void *)(O)                                     \
+         ? (*(void *volatile *)(P) = (void *)(N), FcTrue)                      \
+         : FcFalse)
 
 #else /* FC_NO_MT */
 
 typedef int fc_atomic_int_t;
-#define fc_atomic_int_add(AI, V)	(((AI) += (V)) - (V))
+#define fc_atomic_int_add(AI, V) (((AI) += (V)) - (V))
 
-#define fc_atomic_ptr_get(P)		((void *) *(P))
-#define fc_atomic_ptr_cmpexch(P,O,N)	(* (void **) (P) == (void *) (O) ? (* (void **) (P) = (void *) (N), FcTrue) : FcFalse)
+#define fc_atomic_ptr_get(P) ((void *)*(P))
+#define fc_atomic_ptr_cmpexch(P, O, N)                                         \
+    (*(void **)(P) == (void *)(O) ? (*(void **)(P) = (void *)(N), FcTrue)      \
+                                  : FcFalse)
 
 #endif
 
 /* reference count */
-#define FC_REF_CONSTANT_VALUE ((fc_atomic_int_t) -1)
-#define FC_REF_CONSTANT {FC_REF_CONSTANT_VALUE}
-typedef struct _FcRef { fc_atomic_int_t count; } FcRef;
-static inline void   FcRefInit     (FcRef *r, int v) { r->count = v; }
-static inline int    FcRefInc      (FcRef *r) { return fc_atomic_int_add (r->count, +1); }
-static inline int    FcRefDec      (FcRef *r) { return fc_atomic_int_add (r->count, -1); }
-static inline int    FcRefAdd      (FcRef *r, int v) { return fc_atomic_int_add (r->count, v); }
-static inline void   FcRefSetConst (FcRef *r) { r->count = FC_REF_CONSTANT_VALUE; }
-static inline FcBool FcRefIsConst  (const FcRef *r) { return r->count == FC_REF_CONSTANT_VALUE; }
+#define FC_REF_CONSTANT_VALUE ((fc_atomic_int_t) - 1)
+#define FC_REF_CONSTANT                                                        \
+    { FC_REF_CONSTANT_VALUE }
+typedef struct _FcRef {
+    fc_atomic_int_t count;
+} FcRef;
+static inline void FcRefInit(FcRef *r, int v) { r->count = v; }
+static inline int FcRefInc(FcRef *r) { return fc_atomic_int_add(r->count, +1); }
+static inline int FcRefDec(FcRef *r) { return fc_atomic_int_add(r->count, -1); }
+static inline int FcRefAdd(FcRef *r, int v) {
+    return fc_atomic_int_add(r->count, v);
+}
+static inline void FcRefSetConst(FcRef *r) { r->count = FC_REF_CONSTANT_VALUE; }
+static inline FcBool FcRefIsConst(const FcRef *r) {
+    return r->count == FC_REF_CONSTANT_VALUE;
+}
 
 #endif /* _FCATOMIC_H_ */

@@ -27,43 +27,30 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-const FcMatrix    FcIdentityMatrix = { 1, 0, 0, 1 };
+const FcMatrix FcIdentityMatrix = { 1, 0, 0, 1 };
 
-FcMatrix *
-FcMatrixCopy (const FcMatrix *mat)
-{
+FcMatrix *FcMatrixCopy(const FcMatrix *mat) {
     FcMatrix *r;
-    if(!mat)
-	return 0;
-    r = (FcMatrix *) malloc (sizeof (*r) );
-    if (!r)
-	return 0;
+    if (!mat) return 0;
+    r = (FcMatrix *)malloc(sizeof(*r));
+    if (!r) return 0;
     *r = *mat;
     return r;
 }
 
-void
-FcMatrixFree (FcMatrix *mat)
-{
-    if (mat != &FcIdentityMatrix)
-	free (mat);
+void FcMatrixFree(FcMatrix *mat) {
+    if (mat != &FcIdentityMatrix) free(mat);
 }
 
-FcBool
-FcMatrixEqual (const FcMatrix *mat1, const FcMatrix *mat2)
-{
-    if(mat1 == mat2) return FcTrue;
-    if(mat1 == 0 || mat2 == 0) return FcFalse;
-    return mat1->xx == mat2->xx &&
-	   mat1->xy == mat2->xy &&
-	   mat1->yx == mat2->yx &&
-	   mat1->yy == mat2->yy;
+FcBool FcMatrixEqual(const FcMatrix *mat1, const FcMatrix *mat2) {
+    if (mat1 == mat2) return FcTrue;
+    if (mat1 == 0 || mat2 == 0) return FcFalse;
+    return mat1->xx == mat2->xx && mat1->xy == mat2->xy && mat1->yx == mat2->yx
+           && mat1->yy == mat2->yy;
 }
 
-void
-FcMatrixMultiply (FcMatrix *result, const FcMatrix *a, const FcMatrix *b)
-{
-    FcMatrix	r;
+void FcMatrixMultiply(FcMatrix *result, const FcMatrix *a, const FcMatrix *b) {
+    FcMatrix r;
 
     r.xx = a->xx * b->xx + a->xy * b->yx;
     r.xy = a->xx * b->xy + a->xy * b->yy;
@@ -72,10 +59,8 @@ FcMatrixMultiply (FcMatrix *result, const FcMatrix *a, const FcMatrix *b)
     *result = r;
 }
 
-void
-FcMatrixRotate (FcMatrix *m, double c, double s)
-{
-    FcMatrix	r;
+void FcMatrixRotate(FcMatrix *m, double c, double s) {
+    FcMatrix r;
 
     /*
      * X Coordinate system is upside down, swap to make
@@ -85,29 +70,25 @@ FcMatrixRotate (FcMatrix *m, double c, double s)
     r.xy = -s;
     r.yx = s;
     r.yy = c;
-    FcMatrixMultiply (m, &r, m);
+    FcMatrixMultiply(m, &r, m);
 }
 
-void
-FcMatrixScale (FcMatrix *m, double sx, double sy)
-{
-    FcMatrix	r;
+void FcMatrixScale(FcMatrix *m, double sx, double sy) {
+    FcMatrix r;
 
     r.xx = sx;
     r.xy = 0;
     r.yx = 0;
     r.yy = sy;
-    FcMatrixMultiply (m, &r, m);
+    FcMatrixMultiply(m, &r, m);
 }
 
-void
-FcMatrixShear (FcMatrix *m, double sh, double sv)
-{
-    FcMatrix	r;
+void FcMatrixShear(FcMatrix *m, double sh, double sv) {
+    FcMatrix r;
 
     r.xx = 1;
     r.xy = sh;
     r.yx = sv;
     r.yy = 1;
-    FcMatrixMultiply (m, &r, m);
+    FcMatrixMultiply(m, &r, m);
 }
