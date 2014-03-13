@@ -44,7 +44,7 @@ FcPrivate FcBool FcFreeTypeHasLang(FcPattern *pattern, const FcChar8 *lang);
 FcPrivate FcChar32 FcFreeTypeUcs4ToPrivate(FcChar32 ucs4, const FcCharMap *map);
 
 FcPrivate FcChar32
-FcFreeTypePrivateToUcs4(FcChar32 private, const FcCharMap *map);
+FcFreeTypePrivateToUcs4(FcChar32 priv, const FcCharMap *map);
 
 FcPrivate const FcCharMap *FcFreeTypeGetPrivateMap(FT_Encoding encoding);
 

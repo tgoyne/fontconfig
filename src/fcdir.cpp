@@ -24,11 +24,20 @@
 
 extern "C" {
 #include "fcint.h"
+#include "fcftint.h"
+
+#include <ft2build.h>
+#include FT_FREETYPE_H
 }
 
 #include <algorithm>
+#include <chrono>
 #include <filesystem>
+#include <future>
+#include <thread>
 #include <vector>
+
+#undef min
 
 namespace fs = std::tr2::sys;
 
@@ -40,6 +49,32 @@ fs::path fc_path(const FcChar8 *p) {
 template <typename T, typename Del>
 auto wrap(T *ptr, Del del) -> std::unique_ptr<T, Del> {
     return std::unique_ptr<T, Del>(ptr, del);
+}
+
+using FcPatternVector = std::vector<std::unique_ptr<FcPattern, decltype(&FcPatternDestroy)>>;
+FcPatternVector add_fonts(std::vector<std::string> const& files, size_t start, size_t end, FcBlanks *blanks) {
+    FcPatternVector ret;
+
+    FT_Library ft_library;
+    if (FT_Init_FreeType(&ft_library)) return ret;
+
+    for (size_t i = start; i < end; ++i) {
+        int count = 0;
+        int id = 0;
+        do {
+            FT_Face face;
+            if (FT_New_Face(ft_library, files[i].c_str(), id, &face)) break;
+            auto pat = FcFreeTypeQueryFace(face, (const FcChar8 *)files[i].c_str(), id, blanks);
+            count = face->num_faces;
+            FT_Done_Face(face);
+
+            if (pat)
+                ret.emplace_back(pat, FcPatternDestroy);
+        } while (++id < count);
+    }
+
+    FT_Done_FreeType(ft_library);
+    return ret;
 }
 
 FcBool FcFileScanFontConfig(FcFontSet *set, FcBlanks *blanks,
@@ -79,12 +114,6 @@ FcBool FcFileScanConfig(FcFontSet *set, FcStrSet *dirs, FcBlanks *blanks,
     return FcTrue;
 }
 
-FcBool FcFileScan(FcFontSet *set, FcStrSet *dirs, FcFileCache *cache FC_UNUSED,
-                  FcBlanks *blanks, const FcChar8 *file,
-                  FcBool force FC_UNUSED) {
-    return FcFileScanConfig(set, dirs, blanks, file, FcConfigGetCurrent());
-}
-
 FcBool FcDirScanConfig(FcFontSet *set, FcStrSet *dirs, FcBlanks *blanks,
                        const FcChar8 *dir, FcBool force, FcConfig *config) {
     if (!force) return FcFalse;
@@ -101,9 +130,29 @@ FcBool FcDirScanConfig(FcFontSet *set, FcStrSet *dirs, FcBlanks *blanks,
 
     sort(begin(files), end(files));
 
-    for (auto const &file : files)
-        FcFileScanConfig(set, dirs, blanks, (const FcChar8 *)file.c_str(),
-                         config);
+    auto thread_count = std::thread::hardware_concurrency();
+    auto slice_size = (files.size() + thread_count - 1) / thread_count;
+    std::vector<std::future<FcPatternVector>> futures;
+    for (size_t thread = 0; thread < thread_count; ++thread) {
+        futures.emplace_back(std::async(std::launch::async, [&] {
+            auto end = std::min((thread + 1) * slice_size, files.size());
+            return add_fonts(files, thread * slice_size, end, blanks);
+        }));
+    }
+
+    FcPatternVector fonts;
+    fonts.reserve(files.size());
+    for (auto& future : futures) {
+        FcPatternVector vec = future.get();
+        move(begin(vec), end(vec), back_inserter(fonts));
+    }
+
+    for (auto& font : fonts) {
+        if (!FcConfigSubstitute(config, font.get(), FcMatchScan))
+            continue;
+        if (FcFontSetAdd(set, font.get()))
+            font.release();
+    }
 
     return FcTrue;
 }
