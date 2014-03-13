@@ -2347,6 +2347,3 @@ FcConfigSetSysRoot (FcConfig      *config,
     }
 }
 
-#define __fccfg__
-#include "fcaliastail.h"
-#undef __fccfg__

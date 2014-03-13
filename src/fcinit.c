@@ -210,6 +210,3 @@ FcInitBringUptoDate (void)
     return FcInitReinitialize ();
 }
 
-#define __fcinit__
-#include "fcaliastail.h"
-#undef __fcinit__

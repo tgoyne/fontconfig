@@ -255,7 +255,3 @@ Exit:
 
   return error;
 }
-
-#undef QALLOC
-#include "fcaliastail.h"
-#undef __ftglue__

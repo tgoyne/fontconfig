@@ -494,6 +494,3 @@ FcInitDebug (void)
 	}
     }
 }
-#define __fcdbg__
-#include "fcaliastail.h"
-#undef __fcdbg__

@@ -1312,7 +1312,3 @@ FcValueListSerialize (FcSerialize *serialize, const FcValueList *vl)
     return head_serialized;
 }
 
-#define __fcpat__
-#include "fcaliastail.h"
-#include "fcftaliastail.h"
-#undef __fcpat__

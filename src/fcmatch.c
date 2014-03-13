@@ -1021,6 +1021,3 @@ FcFontSort (FcConfig	*config,
 	sets[nsets++] = config->fonts[FcSetApplication];
     return FcFontSetSort (config, sets, nsets, p, trim, csp, result);
 }
-#define __fcmatch__
-#include "fcaliastail.h"
-#undef __fcmatch__

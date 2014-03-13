@@ -1473,6 +1473,3 @@ FcCacheCreateTagFile (const FcConfig *config)
     FcStrListDone (list);
 }
 
-#define __fccache__
-#include "fcaliastail.h"
-#undef __fccache__

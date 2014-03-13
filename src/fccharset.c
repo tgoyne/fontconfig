@@ -1429,6 +1429,3 @@ FcCharSetSerialize(FcSerialize *serialize, const FcCharSet *cs)
 
     return cs_serialized;
 }
-#define __fccharset__
-#include "fcaliastail.h"
-#undef __fccharset__

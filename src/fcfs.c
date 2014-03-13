@@ -144,6 +144,3 @@ bail:
     return NULL;
 }
 
-#define __fcfs__
-#include "fcaliastail.h"
-#undef __fcfs__

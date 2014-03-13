@@ -1053,7 +1053,3 @@ FcLangSetSubtract (const FcLangSet *a, const FcLangSet *b)
     return FcLangSetOperate(a, b, FcLangSetDel);
 }
 
-#define __fclang__
-#include "fcaliastail.h"
-#include "fcftaliastail.h"
-#undef __fclang__

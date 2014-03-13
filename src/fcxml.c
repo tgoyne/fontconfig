@@ -3207,6 +3207,3 @@ bail0:
     }
     return FcTrue;
 }
-#define __fcxml__
-#include "fcaliastail.h"
-#undef __fcxml__

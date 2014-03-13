@@ -111,6 +111,3 @@ FcMatrixShear (FcMatrix *m, double sh, double sv)
     r.yy = 1;
     FcMatrixMultiply (m, &r, m);
 }
-#define __fcmatrix__
-#include "fcaliastail.h"
-#undef __fcmatrix__

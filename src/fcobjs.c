@@ -135,5 +135,3 @@ FcObjectLookupOtherTypeById (FcObject id)
 }
 
 
-#include "fcaliastail.h"
-#undef __fcobjs__

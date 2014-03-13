@@ -311,6 +311,3 @@ FcDefaultSubstitute (FcPattern *pattern)
 	    FcPatternObjectAddString (pattern, FC_PRGNAME_OBJECT, prgname);
     }
 }
-#define __fcdefault__
-#include "fcaliastail.h"
-#undef __fcdefault__

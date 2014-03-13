@@ -1215,6 +1215,3 @@ FcPatternFormat (FcPattern *pat,
     }
 }
 
-#define __fcformat__
-#include "fcaliastail.h"
-#undef __fcformat__
