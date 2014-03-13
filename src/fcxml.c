@@ -23,6 +23,9 @@
  */
 
 #include "fcint.h"
+
+#if 0
+
 #include <fcntl.h>
 #include <stdarg.h>
 #include <dirent.h>
@@ -56,6 +59,8 @@
 #include <mbstring.h>
 #endif
 
+#endif
+
 static void FcExprDestroy(FcExpr *e);
 
 void FcTestDestroy(FcTest *test) {
@@ -79,6 +84,8 @@ void FcRuleDestroy(FcRule *rule) {
     free(rule);
     if (n) FcRuleDestroy(n);
 }
+
+#if 0
 
 static FcExpr *FcExprCreateInteger(FcConfig *config, int i) {
     FcExpr *e = FcConfigAllocExpr(config);
@@ -121,6 +128,8 @@ static void FcExprMatrixFreeShallow(FcExprMatrix *m) {
     free(m);
 }
 
+#endif
+
 static void FcExprMatrixFree(FcExprMatrix *m) {
     if (!m) return;
 
@@ -131,6 +140,8 @@ static void FcExprMatrixFree(FcExprMatrix *m) {
 
     free(m);
 }
+
+#if 0
 
 static FcExpr *FcExprCreateMatrix(FcConfig *config,
                                   const FcExprMatrix *matrix) {
@@ -197,6 +208,8 @@ static FcExpr *FcExprCreateOp(FcConfig *config, FcExpr *left, FcOp op,
     }
     return e;
 }
+
+#endif
 
 static void FcExprDestroy(FcExpr *e) {
     if (!e) return;
@@ -273,6 +286,8 @@ void FcEditDestroy(FcEdit *e) {
     if (e->expr) FcExprDestroy(e->expr);
     free(e);
 }
+
+#if 0
 
 typedef enum _FcElement {
     FcElementNone,
@@ -2752,4 +2767,10 @@ bail0:
         return FcFalse;
     }
     return FcTrue;
+}
+#endif
+
+FcBool FcConfigParseAndLoad(FcConfig *config, const FcChar8 *name,
+                            FcBool complain) {
+    return FcFalse;
 }

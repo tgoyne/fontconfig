@@ -23,7 +23,9 @@
  */
 
 #include "fcint.h"
+
 #include <stdlib.h>
+#include <shlobj.h>
 
 #if defined(FC_ATOMIC_INT_NIL)
 #pragma message(                                                               \
@@ -38,18 +40,22 @@
 #endif
 
 static FcConfig *FcInitFallbackConfig(void) {
-    FcConfig *config;
+    FcConfig *config = FcConfigCreate();
+    if (!config) return NULL;
 
-    config = FcConfigCreate();
-    if (!config) goto bail0;
-    if (!FcConfigAddDir(config, (FcChar8 *)FC_DEFAULT_FONTS)) goto bail1;
-    if (!FcConfigAddCacheDir(config, (FcChar8 *)FC_CACHEDIR)) goto bail1;
+    char dir[MAX_PATH + 12];
+    SHGetFolderPath(NULL, CSIDL_FONTS, NULL, 0, dir);
+
+    if (!FcConfigAddDir(config, (FcChar8 *)dir)) goto bail1;
+
+    SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, dir);
+    strcat(dir, "\\fontconfig");
+    if (!FcConfigAddCacheDir(config, (FcChar8 *)dir)) goto bail1;
     return config;
 
 bail1:
     FcConfigDestroy(config);
-bail0:
-    return 0;
+    return NULL;
 }
 
 int FcGetVersion(void) { return FC_VERSION; }
