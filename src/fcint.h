@@ -479,7 +479,7 @@ typedef struct _FcCaseFold {
 
 struct _FcAtomic {
     FcChar8 *file; /* original file name */
-    FcChar8 *new;  /* temp file name -- write data here */
+    FcChar8 *new_file;  /* temp file name -- write data here */
     FcChar8 *lck;  /* lockfile name (used for locking) */
     FcChar8 *tmp;  /* tmpfile name (used for locking) */
 };
@@ -718,7 +718,7 @@ FcPrivate FcChar16 *FcCharSetGetNumbers(const FcCharSet *c);
 /* fccompat.c */
 FcPrivate int FcOpen(const char *pathname, int flags, ...);
 
-FcPrivate int FcMakeTempfile(char *template);
+FcPrivate int FcMakeTempfile(char *tmpl);
 
 FcPrivate int32_t FcRandom(void);
 

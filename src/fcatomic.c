@@ -76,11 +76,11 @@ FcAtomic *FcAtomicCreate(const FcChar8 *file) {
     atomic->file = (FcChar8 *)(atomic + 1);
     strcpy((char *)atomic->file, (char *)file);
 
-    atomic->new = atomic->file + file_len + 1;
-    strcpy((char *)atomic->new, (char *)file);
-    strcat((char *)atomic->new, NEW_NAME);
+    atomic->new_file = atomic->file + file_len + 1;
+    strcpy((char *)atomic->new_file, (char *)file);
+    strcat((char *)atomic->new_file, NEW_NAME);
 
-    atomic->lck = atomic->new + new_len + 1;
+    atomic->lck = atomic->new_file + new_len + 1;
     strcpy((char *)atomic->lck, (char *)file);
     strcat((char *)atomic->lck, LCK_NAME);
 
@@ -156,11 +156,11 @@ FcBool FcAtomicLock(FcAtomic *atomic) {
         }
         return FcFalse;
     }
-    (void)unlink((char *)atomic->new);
+    (void)unlink((char *)atomic->new_file);
     return FcTrue;
 }
 
-FcChar8 *FcAtomicNewFile(FcAtomic *atomic) { return atomic->new; }
+FcChar8 *FcAtomicNewFile(FcAtomic *atomic) { return atomic->new_file; }
 
 FcChar8 *FcAtomicOrigFile(FcAtomic *atomic) { return atomic->file; }
 
@@ -168,11 +168,11 @@ FcBool FcAtomicReplaceOrig(FcAtomic *atomic) {
 #ifdef _WIN32
     unlink((const char *)atomic->file);
 #endif
-    if (rename((char *)atomic->new, (char *)atomic->file) < 0) return FcFalse;
+    if (rename((char *)atomic->new_file, (char *)atomic->file) < 0) return FcFalse;
     return FcTrue;
 }
 
-void FcAtomicDeleteNew(FcAtomic *atomic) { unlink((char *)atomic->new); }
+void FcAtomicDeleteNew(FcAtomic *atomic) { unlink((char *)atomic->new_file); }
 
 void FcAtomicUnlock(FcAtomic *atomic) {
 #ifdef HAVE_LINK
