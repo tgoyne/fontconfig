@@ -43,11 +43,9 @@ static FcConfig *FcInitFallbackConfig(void) {
     FcConfig *config = FcConfigCreate();
     if (!config) return NULL;
 
+    if (!FcConfigAddDir(config, (FcChar8 *)"WINDOWSREGISTRY")) goto bail1;
+
     char dir[MAX_PATH + 12];
-    SHGetFolderPath(NULL, CSIDL_FONTS, NULL, 0, dir);
-
-    if (!FcConfigAddDir(config, (FcChar8 *)dir)) goto bail1;
-
     SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, dir);
     strcat(dir, "\\fontconfig");
     if (!FcConfigAddCacheDir(config, (FcChar8 *)dir)) goto bail1;

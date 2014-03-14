@@ -77,6 +77,28 @@ int FcStat(const FcChar8 *file, struct stat *statb) {
     char *basename;
     DWORD rc;
 
+    if (strcmp(file, "WINDOWSREGISTRY") == 0) {
+        HKEY key;
+        FILETIME ft;
+        ULARGE_INTEGER u;
+
+        DWORD res = RegOpenKeyExW(
+            HKEY_LOCAL_MACHINE,
+            L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts", 0,
+            KEY_QUERY_VALUE, &key);
+        if (res != ERROR_SUCCESS) return -1;
+
+        res = RegQueryInfoKey(key, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &ft);
+        RegCloseKey(key);
+        if (res != ERROR_SUCCESS) return -1;
+
+        u.LowPart = ft.dwLowDateTime;
+        u.HighPart = ft.dwHighDateTime;
+        // shift to seconds since 2000ish to fit in 32-bit time_t
+        statb->st_mtime = (time_t)(u.QuadPart / 10000000 - 12614400000);
+        return 0;
+    }
+
     if (!GetFileAttributesEx((LPCSTR)file, GetFileExInfoStandard, &wfad))
         return -1;
 

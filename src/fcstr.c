@@ -919,6 +919,10 @@ static void FcConvertDosPath(char *str) {
 FcChar8 *FcStrCanonFilename(const FcChar8 *s) {
 #ifdef _WIN32
     FcChar8 full[FC_MAX_FILE_LEN + 2];
+
+    if (strcmp(s, "WINDOWSREGISTRY") == 0)
+        return strdup(s);
+
     int size = GetFullPathName((LPCSTR)s, sizeof(full) - 1, (LPSTR)full, NULL);
 
     if (size == 0) perror("GetFullPathName");

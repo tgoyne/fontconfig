@@ -37,6 +37,8 @@ extern "C" {
 #include <thread>
 #include <vector>
 
+#include <ShlObj.h>
+
 #undef min
 
 namespace fs = std::tr2::sys;
@@ -75,6 +77,35 @@ FcPatternVector add_fonts(std::vector<std::string> const& files, size_t start, s
 
     FT_Done_FreeType(ft_library);
     return ret;
+}
+
+void index_fonts(std::vector<std::string>& files, FcFontSet *set,
+                 FcBlanks *blanks, FcConfig *config) {
+    sort(begin(files), end(files));
+
+    auto thread_count = std::thread::hardware_concurrency();
+    auto slice_size = (files.size() + thread_count - 1) / thread_count;
+    std::vector<std::future<FcPatternVector>> futures;
+    for (size_t thread = 0; thread < thread_count; ++thread) {
+        futures.emplace_back(std::async(std::launch::async, [&, thread] {
+            auto end = std::min((thread + 1) * slice_size, files.size());
+            return add_fonts(files, thread * slice_size, end, blanks);
+        }));
+    }
+
+    FcPatternVector fonts;
+    fonts.reserve(files.size());
+    for (auto& future : futures) {
+        FcPatternVector vec = future.get();
+        move(begin(vec), end(vec), back_inserter(fonts));
+    }
+
+    for (auto& font : fonts) {
+        if (!FcConfigSubstitute(config, font.get(), FcMatchScan))
+            continue;
+        if (FcFontSetAdd(set, font.get()))
+            font.release();
+    }
 }
 
 FcBool FcFileScanFontConfig(FcFontSet *set, FcBlanks *blanks,
@@ -120,39 +151,46 @@ FcBool FcDirScanConfig(FcFontSet *set, FcStrSet *dirs, FcBlanks *blanks,
     if (!set && !dirs) return FcTrue;
     if (!blanks) blanks = FcConfigGetBlanks(config);
 
-    auto dir_path = fc_path(dir);
-    if (!is_directory(dir_path)) return FcTrue;
-
     std::vector<std::string> files;
-    for (auto const &file : fs::directory_iterator(dir_path)) {
-        if (is_regular(file.status())) files.push_back(file.path());
+    if (strcmp((const char *)dir, "WINDOWSREGISTRY") == 0) {
+        static const auto fonts_key_name = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts";
+
+        HKEY key;
+        auto ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, fonts_key_name, 0, KEY_QUERY_VALUE, &key);
+        if (ret != ERROR_SUCCESS) return 0;
+
+        char fdir[MAX_PATH];
+        SHGetFolderPath(NULL, CSIDL_FONTS, NULL, 0, fdir);
+
+        std::tr2::sys::path font_dir(fdir);
+
+        for (DWORD i = 0;; ++i) {
+            char font_name[SHRT_MAX], font_filename[MAX_PATH];
+            DWORD name_len = sizeof(font_name);
+            DWORD data_len = sizeof(font_filename);
+
+            ret = RegEnumValueA(key, i, font_name, &name_len, NULL, NULL, reinterpret_cast<BYTE *>(font_filename), &data_len);
+            if (ret == ERROR_NO_MORE_ITEMS) break;
+            if (ret != ERROR_SUCCESS) continue;
+
+            std::tr2::sys::path font_path(font_filename);
+            if (!is_regular(font_path))
+                font_path = font_dir / font_path;
+            files.push_back(font_path.string());
+        }
+
+        RegCloseKey(key);
+    }
+    else {
+        auto dir_path = fc_path(dir);
+        if (!is_directory(dir_path)) return FcTrue;
+
+        for (auto const &file : fs::directory_iterator(dir_path)) {
+            if (is_regular(file.status())) files.push_back(file.path());
+        }
     }
 
-    sort(begin(files), end(files));
-
-    auto thread_count = std::thread::hardware_concurrency();
-    auto slice_size = (files.size() + thread_count - 1) / thread_count;
-    std::vector<std::future<FcPatternVector>> futures;
-    for (size_t thread = 0; thread < thread_count; ++thread) {
-        futures.emplace_back(std::async(std::launch::async, [&] {
-            auto end = std::min((thread + 1) * slice_size, files.size());
-            return add_fonts(files, thread * slice_size, end, blanks);
-        }));
-    }
-
-    FcPatternVector fonts;
-    fonts.reserve(files.size());
-    for (auto& future : futures) {
-        FcPatternVector vec = future.get();
-        move(begin(vec), end(vec), back_inserter(fonts));
-    }
-
-    for (auto& font : fonts) {
-        if (!FcConfigSubstitute(config, font.get(), FcMatchScan))
-            continue;
-        if (FcFontSetAdd(set, font.get()))
-            font.release();
-    }
+    index_fonts(files, set, blanks, config);
 
     return FcTrue;
 }
