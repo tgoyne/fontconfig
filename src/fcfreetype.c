@@ -1561,14 +1561,14 @@ FcPattern *FcFreeTypeQueryFace(const FT_Face face, const FcChar8 *file, int id,
             free(fontdata);
             goto bail3;
         }
-        memset(&fontdata[len], 0, alen - len);
-        hashstr = FcHashGetSHA256DigestFromMemory(fontdata, len);
+        //memset(&fontdata[len], 0, alen - len);
+        //hashstr = FcHashGetSHA256DigestFromMemory(fontdata, len);
         free(fontdata);
     } else if (err == FT_Err_Invalid_Face_Handle) {
         /* font may not support SFNT. falling back to
          * read the font data from file directly
          */
-        hashstr = FcHashGetSHA256DigestFromFile(file);
+        //hashstr = FcHashGetSHA256DigestFromFile(file);
     } else {
         goto bail3;
     }
