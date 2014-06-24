@@ -908,9 +908,6 @@ FcPrivate FcBool
 FcPatternObjectAddString(FcPattern *p, FcObject object, const FcChar8 *s);
 
 FcPrivate FcBool
-FcPatternObjectAddMatrix(FcPattern *p, FcObject object, const FcMatrix *s);
-
-FcPrivate FcBool
 FcPatternObjectAddCharSet(FcPattern *p, FcObject object, const FcCharSet *c);
 
 FcPrivate FcBool
@@ -927,9 +924,6 @@ FcPatternObjectGetDouble(const FcPattern *p, FcObject object, int n, double *d);
 
 FcPrivate FcResult FcPatternObjectGetString(const FcPattern *p, FcObject object,
                                             int n, FcChar8 **s);
-
-FcPrivate FcResult FcPatternObjectGetMatrix(const FcPattern *p, FcObject object,
-                                            int n, FcMatrix **s);
 
 FcPrivate FcResult FcPatternObjectGetCharSet(const FcPattern *p,
                                              FcObject object, int n,
@@ -961,10 +955,6 @@ FcPrivate FcValueList *FcValueListSerialize(FcSerialize *serialize,
 /* fcrender.c */
 
 /* fcmatrix.c */
-
-extern FcPrivate const FcMatrix FcIdentityMatrix;
-
-FcPrivate void FcMatrixFree(FcMatrix *mat);
 
 /* fcstat.c */
 

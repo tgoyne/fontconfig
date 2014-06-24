@@ -43,9 +43,6 @@ void FcValueDestroy(FcValue v) {
     case FcTypeString:
         FcFree(v.u.s);
         break;
-    case FcTypeMatrix:
-        FcMatrixFree((FcMatrix *)v.u.m);
-        break;
     case FcTypeCharSet:
         FcCharSetDestroy((FcCharSet *)v.u.c);
         break;
@@ -86,10 +83,6 @@ FcValue FcValueSave(FcValue v) {
         v.u.s = FcStrdup(v.u.s);
         if (!v.u.s) v.type = FcTypeVoid;
         break;
-    case FcTypeMatrix:
-        v.u.m = FcMatrixCopy(v.u.m);
-        if (!v.u.m) v.type = FcTypeVoid;
-        break;
     case FcTypeCharSet:
         v.u.c = FcCharSetCopy((FcCharSet *)v.u.c);
         if (!v.u.c) v.type = FcTypeVoid;
@@ -114,9 +107,6 @@ void FcValueListDestroy(FcValueListPtr l) {
         switch ((int)l->value.type) {
         case FcTypeString:
             FcFree(l->value.u.s);
-            break;
-        case FcTypeMatrix:
-            FcMatrixFree((FcMatrix *)l->value.u.m);
             break;
         case FcTypeCharSet:
             FcCharSetDestroy((FcCharSet *)(l->value.u.c));
@@ -216,8 +206,6 @@ FcBool FcValueEqual(FcValue va, FcValue vb) {
         return FcStrCmpIgnoreCase(va.u.s, vb.u.s) == 0;
     case FcTypeBool:
         return va.u.b == vb.u.b;
-    case FcTypeMatrix:
-        return FcMatrixEqual(va.u.m, vb.u.m);
     case FcTypeCharSet:
         return FcCharSetEqual(va.u.c, vb.u.c);
     case FcTypeFTFace:
@@ -256,9 +244,6 @@ static FcChar32 FcValueHash(const FcValue *v) {
         return FcStringHash(FcValueString(v));
     case FcTypeBool:
         return (FcChar32)v->u.b;
-    case FcTypeMatrix:
-        return (FcDoubleHash(v->u.m->xx) ^ FcDoubleHash(v->u.m->xy)
-                ^ FcDoubleHash(v->u.m->yx) ^ FcDoubleHash(v->u.m->yy));
     case FcTypeCharSet:
         return (FcChar32)FcValueCharSet(v)->num;
     case FcTypeFTFace:
@@ -631,14 +616,6 @@ FcBool FcPatternAddString(FcPattern *p, const char *object, const FcChar8 *s) {
     return FcPatternObjectAddString(p, FcObjectFromName(object), s);
 }
 
-FcBool FcPatternAddMatrix(FcPattern *p, const char *object, const FcMatrix *s) {
-    FcValue v;
-
-    v.type = FcTypeMatrix;
-    v.u.m = s;
-    return FcPatternAdd(p, object, v, FcTrue);
-}
-
 FcBool FcPatternObjectAddBool(FcPattern *p, FcObject object, FcBool b) {
     FcValue v;
 
@@ -766,18 +743,6 @@ FcResult FcPatternObjectGetString(const FcPattern *p, FcObject object, int id,
 FcResult FcPatternGetString(const FcPattern *p, const char *object, int id,
                             FcChar8 **s) {
     return FcPatternObjectGetString(p, FcObjectFromName(object), id, s);
-}
-
-FcResult FcPatternGetMatrix(const FcPattern *p, const char *object, int id,
-                            FcMatrix **m) {
-    FcValue v;
-    FcResult r;
-
-    r = FcPatternGet(p, object, id, &v);
-    if (r != FcResultMatch) return r;
-    if (v.type != FcTypeMatrix) return FcResultTypeMismatch;
-    *m = (FcMatrix *)v.u.m;
-    return FcResultMatch;
 }
 
 FcResult FcPatternGetBool(const FcPattern *p, const char *object, int id,
@@ -1040,9 +1005,6 @@ FcValueList *FcValueListSerialize(FcSerialize *serialize,
             break;
         case FcTypeBool:
             vl_serialized->value.u.b = vl->value.u.b;
-            break;
-        case FcTypeMatrix:
-            /* can't happen */
             break;
         case FcTypeCharSet:
             c_serialized = FcCharSetSerialize(serialize, vl->value.u.c);

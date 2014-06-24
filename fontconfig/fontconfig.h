@@ -128,7 +128,6 @@ typedef int FcBool;
 /* Adjust outline rasterizer */
 #define FC_CHAR_WIDTH "charwidth"   /* Int */
 #define FC_CHAR_HEIGHT "charheight" /* Int */
-#define FC_MATRIX "matrix"          /* FcMatrix */
 
 #define FC_WEIGHT_THIN 0
 #define FC_WEIGHT_EXTRALIGHT 40
@@ -194,17 +193,10 @@ typedef enum _FcType {
     FcTypeDouble,
     FcTypeString,
     FcTypeBool,
-    FcTypeMatrix,
     FcTypeCharSet,
     FcTypeFTFace,
     FcTypeLangSet
 } FcType;
-
-typedef struct _FcMatrix {
-    double xx, xy, yx, yy;
-} FcMatrix;
-
-#define FcMatrixInit(m) ((m)->xx = (m)->yy = 1, (m)->xy = (m)->yx = 0)
 
 /*
  * A data structure to represent the available glyphs in a font.
@@ -243,7 +235,6 @@ typedef struct _FcValue {
         int i;
         FcBool b;
         double d;
-        const FcMatrix *m;
         const FcCharSet *c;
         void *f;
         const FcLangSet *l;
@@ -594,20 +585,6 @@ FcPublic FcFontSet *FcFontSort(FcConfig *config, FcPattern *p, FcBool trim,
 
 FcPublic void FcFontSetSortDestroy(FcFontSet *fs);
 
-/* fcmatrix.c */
-FcPublic FcMatrix *FcMatrixCopy(const FcMatrix *mat);
-
-FcPublic FcBool FcMatrixEqual(const FcMatrix *mat1, const FcMatrix *mat2);
-
-FcPublic void FcMatrixMultiply(FcMatrix *result, const FcMatrix *a,
-                               const FcMatrix *b);
-
-FcPublic void FcMatrixRotate(FcMatrix *m, double c, double s);
-
-FcPublic void FcMatrixScale(FcMatrix *m, double sx, double sy);
-
-FcPublic void FcMatrixShear(FcMatrix *m, double sh, double sv);
-
 /* fcname.c */
 
 /* Deprecated.  Does nothing.  Returns FcFalse. */
@@ -679,9 +656,6 @@ FcPublic FcBool
 FcPatternAddString(FcPattern *p, const char *object, const FcChar8 *s);
 
 FcPublic FcBool
-FcPatternAddMatrix(FcPattern *p, const char *object, const FcMatrix *s);
-
-FcPublic FcBool
 FcPatternAddCharSet(FcPattern *p, const char *object, const FcCharSet *c);
 
 FcPublic FcBool FcPatternAddBool(FcPattern *p, const char *object, FcBool b);
@@ -697,9 +671,6 @@ FcPatternGetDouble(const FcPattern *p, const char *object, int n, double *d);
 
 FcPublic FcResult
 FcPatternGetString(const FcPattern *p, const char *object, int n, FcChar8 **s);
-
-FcPublic FcResult
-FcPatternGetMatrix(const FcPattern *p, const char *object, int n, FcMatrix **s);
 
 FcPublic FcResult FcPatternGetCharSet(const FcPattern *p, const char *object,
                                       int n, FcCharSet **c);

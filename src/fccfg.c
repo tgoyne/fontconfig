@@ -549,9 +549,6 @@ static FcValue FcConfigPromote(FcValue v, FcValue u,
     if (v.type == FcTypeInteger) {
         v.type = FcTypeDouble;
         v.u.d = (double)v.u.i;
-    } else if (v.type == FcTypeVoid && u.type == FcTypeMatrix) {
-        v.u.m = &FcIdentityMatrix;
-        v.type = FcTypeMatrix;
     } else if (buf && v.type == FcTypeString && u.type == FcTypeLangSet) {
         v.u.l = FcLangSetPromote(v.u.s, buf);
         v.type = FcTypeLangSet;
@@ -643,21 +640,6 @@ FcBool FcConfigCompareValue(const FcValue *left_o, unsigned int op_,
                 break;
             }
             break;
-        case FcTypeMatrix:
-            switch ((int)op) {
-            case FcOpEqual:
-            case FcOpContains:
-            case FcOpListing:
-                ret = FcMatrixEqual(left.u.m, right.u.m);
-                break;
-            case FcOpNotEqual:
-            case FcOpNotContains:
-                ret = !FcMatrixEqual(left.u.m, right.u.m);
-                break;
-            default:
-                break;
-            }
-            break;
         case FcTypeCharSet:
             switch ((int)op) {
             case FcOpContains:
@@ -741,7 +723,6 @@ FcBool FcConfigCompareValue(const FcValue *left_o, unsigned int op_,
 static FcValue FcConfigEvaluate(FcPattern *p, FcPattern *p_pat,
                                 FcMatchKind kind, FcExpr *e) {
     FcValue v, vl, vr;
-    FcMatrix *m;
     FcChar8 *str;
     FcOp op = FC_OP_GET_OP(e->op);
 
@@ -759,29 +740,6 @@ static FcValue FcConfigEvaluate(FcPattern *p, FcPattern *p_pat,
         v.u.s = e->u.sval;
         v = FcValueSave(v);
         break;
-    case FcOpMatrix: {
-        FcMatrix m;
-        FcValue xx, xy, yx, yy;
-        v.type = FcTypeMatrix;
-        xx = FcConfigPromote(FcConfigEvaluate(p, p_pat, kind, e->u.mexpr->xx),
-                             v, NULL);
-        xy = FcConfigPromote(FcConfigEvaluate(p, p_pat, kind, e->u.mexpr->xy),
-                             v, NULL);
-        yx = FcConfigPromote(FcConfigEvaluate(p, p_pat, kind, e->u.mexpr->yx),
-                             v, NULL);
-        yy = FcConfigPromote(FcConfigEvaluate(p, p_pat, kind, e->u.mexpr->yy),
-                             v, NULL);
-        if (xx.type == FcTypeDouble && xy.type == FcTypeDouble
-            && yx.type == FcTypeDouble && yy.type == FcTypeDouble) {
-            m.xx = xx.u.d;
-            m.xy = xy.u.d;
-            m.yx = yx.u.d;
-            m.yy = yy.u.d;
-            v.u.m = &m;
-        } else
-            v.type = FcTypeVoid;
-        v = FcValueSave(v);
-    } break;
     case FcOpCharSet:
         v.type = FcTypeCharSet;
         v.u.c = e->u.cval;
@@ -910,23 +868,6 @@ static FcValue FcConfigEvaluate(FcPattern *p, FcPattern *p_pat,
                     FcStrFree(str);
 
                     if (!v.u.s) v.type = FcTypeVoid;
-                    break;
-                default:
-                    v.type = FcTypeVoid;
-                    break;
-                }
-                break;
-            case FcTypeMatrix:
-                switch ((int)op) {
-                case FcOpTimes:
-                    v.type = FcTypeMatrix;
-                    m = malloc(sizeof(FcMatrix));
-                    if (m) {
-                        FcMatrixMultiply(m, vl.u.m, vr.u.m);
-                        v.u.m = m;
-                    } else {
-                        v.type = FcTypeVoid;
-                    }
                     break;
                 default:
                     v.type = FcTypeVoid;

@@ -259,8 +259,6 @@ FcObjectTypeLookup (register const char *str, register unsigned int len)
       {offsetof(struct FcObjectTypeNamePool_t, FcObjectTypeNamePool_str34),FC_FAMILYLANG_OBJECT},
 #line 35 "fcobjshash.gperf"
       {offsetof(struct FcObjectTypeNamePool_t, FcObjectTypeNamePool_str35),FC_VERTICAL_LAYOUT_OBJECT},
-#line 49 "fcobjshash.gperf"
-      {offsetof(struct FcObjectTypeNamePool_t, FcObjectTypeNamePool_str36),FC_MATRIX_OBJECT},
 #line 40 "fcobjshash.gperf"
       {offsetof(struct FcObjectTypeNamePool_t, FcObjectTypeNamePool_str37),FC_RASTERIZER_OBJECT},
 #line 28 "fcobjshash.gperf"

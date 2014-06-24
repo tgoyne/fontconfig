@@ -197,13 +197,6 @@ FcBool FcListPatternMatchAny(const FcPattern *p, const FcPattern *font) {
     return FcTrue;
 }
 
-static FcChar32 FcListMatrixHash(const FcMatrix *m) {
-    int xx = (int)(m->xx * 100), xy = (int)(m->xy * 100),
-        yx = (int)(m->yx * 100), yy = (int)(m->yy * 100);
-
-    return ((FcChar32)xx) ^ ((FcChar32)xy) ^ ((FcChar32)yx) ^ ((FcChar32)yy);
-}
-
 static FcChar32 FcListValueHash(FcValue *value) {
     FcValue v = FcValueCanonicalize(value);
     switch (v.type) {
@@ -218,8 +211,6 @@ static FcChar32 FcListValueHash(FcValue *value) {
         return FcStrHashIgnoreCase(v.u.s);
     case FcTypeBool:
         return (FcChar32)v.u.b;
-    case FcTypeMatrix:
-        return FcListMatrixHash(v.u.m);
     case FcTypeCharSet:
         return FcCharSetCount(v.u.c);
     case FcTypeFTFace:

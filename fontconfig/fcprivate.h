@@ -61,9 +61,6 @@
             case FcTypeBool:                                                   \
                 __v__.u.b = va_arg(va, FcBool);                                \
                 break;                                                         \
-            case FcTypeMatrix:                                                 \
-                __v__.u.m = va_arg(va, const FcMatrix *);                      \
-                break;                                                         \
             case FcTypeCharSet:                                                \
                 __v__.u.c = va_arg(va, const FcCharSet *);                     \
                 break;                                                         \

@@ -227,7 +227,6 @@ FcBool FcNameBool(const FcChar8 *v, FcBool *result) {
 
 static FcValue FcNameConvert(FcType type, FcChar8 *string) {
     FcValue v;
-    FcMatrix m;
 
     v.type = type;
     switch ((int)v.type) {
@@ -243,11 +242,6 @@ static FcValue FcNameConvert(FcType type, FcChar8 *string) {
         break;
     case FcTypeDouble:
         v.u.d = strtod((char *)string, 0);
-        break;
-    case FcTypeMatrix:
-        FcMatrixInit(&m);
-        sscanf((char *)string, "%lg %lg %lg %lg", &m.xx, &m.xy, &m.yx, &m.yy);
-        v.u.m = FcMatrixCopy(&m);
         break;
     case FcTypeCharSet:
         v.u.c = FcNameParseCharSet(string);
@@ -399,10 +393,6 @@ FcBool FcNameUnparseValue(FcStrBuf *buf, FcValue *v0, FcChar8 *escape) {
     case FcTypeBool:
         return FcNameUnparseString(
             buf, v.u.b ? (FcChar8 *)"True" : (FcChar8 *)"False", 0);
-    case FcTypeMatrix:
-        sprintf((char *)temp, "%g %g %g %g", v.u.m->xx, v.u.m->xy, v.u.m->yx,
-                v.u.m->yy);
-        return FcNameUnparseString(buf, temp, 0);
     case FcTypeCharSet:
         return FcNameUnparseCharSet(buf, v.u.c);
     case FcTypeLangSet:
