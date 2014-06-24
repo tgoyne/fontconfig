@@ -23,10 +23,13 @@
  */
 
 #include "fcint.h"
+#ifdef _DEBUG
 #include <stdio.h>
 #include <stdlib.h>
+#endif
 
 static void _FcValuePrintFile(FILE *f, const FcValue v) {
+#ifdef _DEBUG
     switch (v.type) {
     case FcTypeUnknown:
         fprintf(f, "<unknown>");
@@ -56,27 +59,35 @@ static void _FcValuePrintFile(FILE *f, const FcValue v) {
         fprintf(f, "face");
         break;
     }
+#endif
 }
 
 void FcValuePrintFile(FILE *f, const FcValue v) {
+#ifdef _DEBUG
     fprintf(f, " ");
     _FcValuePrintFile(f, v);
+#endif
 }
 
 void FcValuePrint(const FcValue v) {
+#ifdef _DEBUG
     printf(" ");
     _FcValuePrintFile(stdout, v);
+#endif
 }
 
 void FcValuePrintWithPosition(const FcValue v, FcBool show_pos_mark) {
+#ifdef _DEBUG
     if (show_pos_mark)
         printf(" [marker] ");
     else
         printf(" ");
     _FcValuePrintFile(stdout, v);
+#endif
 }
 
 static void FcValueBindingPrint(const FcValueListPtr l) {
+#ifdef _DEBUG
     switch (l->binding) {
     case FcValueBindingWeak:
         printf("(w)");
@@ -92,25 +103,31 @@ static void FcValueBindingPrint(const FcValueListPtr l) {
         printf("(?)");
         break;
     }
+#endif
 }
 
 void FcValueListPrintWithPosition(FcValueListPtr l, const FcValueListPtr pos) {
+#ifdef _DEBUG
     for (; l != NULL; l = FcValueListNext(l)) {
         FcValuePrintWithPosition(FcValueCanonicalize(&l->value),
                                  pos != NULL && l == pos);
         FcValueBindingPrint(l);
     }
     if (!pos) printf(" [marker]");
+#endif
 }
 
 void FcValueListPrint(FcValueListPtr l) {
+#ifdef _DEBUG
     for (; l != NULL; l = FcValueListNext(l)) {
         FcValuePrint(FcValueCanonicalize(&l->value));
         FcValueBindingPrint(l);
     }
+#endif
 }
 
 void FcLangSetPrint(const FcLangSet *ls) {
+#ifdef _DEBUG
     FcStrBuf buf;
     FcChar8 init_buf[1024];
 
@@ -120,9 +137,11 @@ void FcLangSetPrint(const FcLangSet *ls) {
     else
         printf("langset (alloc error)");
     FcStrBufDestroy(&buf);
+#endif
 }
 
 void FcCharSetPrint(const FcCharSet *c) {
+#ifdef _DEBUG
     int i, j;
     intptr_t *leaves = FcCharSetLeaves(c);
     FcChar16 *numbers = FcCharSetNumbers(c);
@@ -150,9 +169,11 @@ void FcCharSetPrint(const FcCharSet *c) {
         for (j = 0; j < 256 / 32; j++) printf(" %08x", leaf->map[j]);
         printf("\n");
     }
+#endif
 }
 
 void FcPatternPrint(const FcPattern *p) {
+#ifdef _DEBUG
     int i;
     FcPatternElt *e;
 
@@ -168,6 +189,7 @@ void FcPatternPrint(const FcPattern *p) {
         printf("\n");
     }
     printf("\n");
+#endif
 }
 
 #define FcOpFlagsPrint(_o_)                                                    \
@@ -177,6 +199,7 @@ void FcPatternPrint(const FcPattern *p) {
     }
 
 void FcOpPrint(FcOp op_) {
+#ifdef _DEBUG
     FcOp op = FC_OP_GET_OP(op_);
 
     switch (op) {
@@ -310,9 +333,11 @@ void FcOpPrint(FcOp op_) {
         printf("Invalid");
         break;
     }
+#endif
 }
 
 void FcExprPrint(const FcExpr *expr) {
+#ifdef _DEBUG
     if (!expr)
         printf("none");
     else
@@ -498,9 +523,11 @@ void FcExprPrint(const FcExpr *expr) {
             printf("Invalid");
             break;
         }
+#endif
 }
 
 void FcTestPrint(const FcTest *test) {
+#ifdef _DEBUG
     switch (test->kind) {
     case FcMatchPattern:
         printf("pattern ");
@@ -531,16 +558,20 @@ void FcTestPrint(const FcTest *test) {
     printf(" ");
     FcExprPrint(test->expr);
     printf("\n");
+#endif
 }
 
 void FcEditPrint(const FcEdit *edit) {
+#ifdef _DEBUG
     printf("Edit %s ", FcObjectName(edit->object));
     FcOpPrint(edit->op);
     printf(" ");
     FcExprPrint(edit->expr);
+#endif
 }
 
 void FcSubstPrint(const FcSubst *subst) {
+#ifdef _DEBUG
     FcRule *r;
     FcRuleType last_type = FcRuleUnknown;
 
@@ -573,9 +604,11 @@ void FcSubstPrint(const FcSubst *subst) {
         }
     }
     printf("\n");
+#endif
 }
 
 void FcFontSetPrint(const FcFontSet *s) {
+#ifdef _DEBUG
     int i;
 
     printf("FontSet %d of %d\n", s->nfont, s->sfont);
@@ -583,11 +616,13 @@ void FcFontSetPrint(const FcFontSet *s) {
         printf("Font %d ", i);
         FcPatternPrint(s->fonts[i]);
     }
+#endif
 }
 
 int FcDebugVal;
 
 void FcInitDebug(void) {
+#ifdef _DEBUG
     if (!FcDebugVal) {
         char *e;
 
@@ -598,4 +633,5 @@ void FcInitDebug(void) {
             if (FcDebugVal < 0) FcDebugVal = 0;
         }
     }
+#endif
 }
