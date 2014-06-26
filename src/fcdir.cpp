@@ -32,6 +32,7 @@ extern "C" {
 
 #include <algorithm>
 #include <chrono>
+#include <codecvt>
 #include <filesystem>
 #include <future>
 #include <thread>
@@ -159,24 +160,25 @@ FcBool FcDirScanConfig(FcFontSet *set, FcStrSet *dirs, FcBlanks *blanks,
         auto ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, fonts_key_name, 0, KEY_QUERY_VALUE, &key);
         if (ret != ERROR_SUCCESS) return 0;
 
-        char fdir[MAX_PATH];
-        SHGetFolderPath(NULL, CSIDL_FONTS, NULL, 0, fdir);
+        wchar_t fdir[MAX_PATH];
+        SHGetFolderPathW(NULL, CSIDL_FONTS, NULL, 0, fdir);
 
-        std::tr2::sys::path font_dir(fdir);
+        std::tr2::sys::wpath font_dir(fdir);
 
+        std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
         for (DWORD i = 0;; ++i) {
-            char font_name[SHRT_MAX], font_filename[MAX_PATH];
+            wchar_t font_name[SHRT_MAX], font_filename[MAX_PATH];
             DWORD name_len = sizeof(font_name);
             DWORD data_len = sizeof(font_filename);
 
-            ret = RegEnumValueA(key, i, font_name, &name_len, NULL, NULL, reinterpret_cast<BYTE *>(font_filename), &data_len);
+            ret = RegEnumValueW(key, i, font_name, &name_len, NULL, NULL, reinterpret_cast<BYTE *>(font_filename), &data_len);
             if (ret == ERROR_NO_MORE_ITEMS) break;
             if (ret != ERROR_SUCCESS) continue;
 
-            std::tr2::sys::path font_path(font_filename);
+            std::tr2::sys::wpath font_path(font_filename);
             if (!is_regular(font_path))
                 font_path = font_dir / font_path;
-            files.push_back(font_path.string());
+            files.push_back(converter.to_bytes(font_path.string()));
         }
 
         RegCloseKey(key);
