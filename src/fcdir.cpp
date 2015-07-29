@@ -35,6 +35,7 @@ extern "C" {
 #include <codecvt>
 #include <filesystem>
 #include <future>
+#include <iterator>
 #include <thread>
 #include <vector>
 
@@ -42,7 +43,7 @@ extern "C" {
 
 #undef min
 
-namespace fs = std::tr2::sys;
+namespace fs = std::experimental::filesystem::v1;
 
 namespace {
 fs::path fc_path(const FcChar8 *p) {
@@ -137,7 +138,7 @@ extern "C" {
 
 FcBool FcFileIsDir(const FcChar8 *file) { return is_directory(fc_path(file)); }
 FcBool FcFileIsLink(const FcChar8 *file) { return is_symlink(fc_path(file)); }
-FcBool FcFileIsFile(const FcChar8 *file) { return is_regular(fc_path(file)); }
+FcBool FcFileIsFile(const FcChar8 *file) { return is_regular_file(fc_path(file)); }
 
 FcBool FcFileScanConfig(FcFontSet *set, FcStrSet *dirs, FcBlanks *blanks,
                         const FcChar8 *file, FcConfig *config) {
@@ -163,7 +164,7 @@ FcBool FcDirScanConfig(FcFontSet *set, FcStrSet *dirs, FcBlanks *blanks,
         wchar_t fdir[MAX_PATH];
         SHGetFolderPathW(NULL, CSIDL_FONTS, NULL, 0, fdir);
 
-        std::tr2::sys::wpath font_dir(fdir);
+        fs::path font_dir(fdir);
 
         std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
         for (DWORD i = 0;; ++i) {
@@ -175,10 +176,10 @@ FcBool FcDirScanConfig(FcFontSet *set, FcStrSet *dirs, FcBlanks *blanks,
             if (ret == ERROR_NO_MORE_ITEMS) break;
             if (ret != ERROR_SUCCESS) continue;
 
-            std::tr2::sys::wpath font_path(font_filename);
-            if (!is_regular(font_path))
+            fs::path font_path(font_filename);
+            if (!is_regular_file(font_path))
                 font_path = font_dir / font_path;
-            files.push_back(converter.to_bytes(font_path.string()));
+            files.push_back(converter.to_bytes(font_path.wstring()));
         }
 
         RegCloseKey(key);
@@ -188,7 +189,7 @@ FcBool FcDirScanConfig(FcFontSet *set, FcStrSet *dirs, FcBlanks *blanks,
         if (!is_directory(dir_path)) return FcTrue;
 
         for (auto const &file : fs::directory_iterator(dir_path)) {
-            if (is_regular(file.status())) files.push_back(file.path());
+            if (is_regular_file(file.status())) files.push_back(file.path().string());
         }
     }
 
